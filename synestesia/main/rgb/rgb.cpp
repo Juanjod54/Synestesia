@@ -3,7 +3,7 @@
  *  Filename: rgb.ino
  **/
 
-#include "headers/rgb.h"
+#include "rgb.h"
 
 struct _RGB{
     int red;
@@ -11,7 +11,7 @@ struct _RGB{
     int blue;
 };
 
-bool is_invalid_rgb(int red, int green, int blue) {
+int is_invalid_rgb(int red, int green, int blue) {
     // Limit values
     return (red < 0 || green < 0 || blue < 0 || red > 255 || green > 255 || blue > 255);
 }
@@ -25,7 +25,7 @@ RGB * create_rgb (int red, int green, int blue) {
     // Limit values
     if (is_invalid_rgb(red, green, blue)) return NULL;
 
-    rgb = malloc(sizeof(rgb[0]));
+    rgb = (RGB*) malloc(sizeof(rgb[0]));
     if (rgb == NULL) return NULL;
 
     rgb -> red = red;
@@ -64,12 +64,12 @@ RGB** copy_rgb(RGB * rgb, int times) {
     int i;
     int red, green, blue;
 
-    RGB *rgb;
+    RGB *rgb_copy;
     RGB **rgbs;
 
     if (rgb == NULL || times < 1) return NULL;
 
-    rgbs = malloc(times * sizeof(rgbs[0]));
+    rgbs = (RGB**) malloc(times * sizeof(rgbs[0]));
     if (rgbs == NULL) return NULL;
 
     //Avoids memory accessing;
@@ -78,16 +78,16 @@ RGB** copy_rgb(RGB * rgb, int times) {
     blue = rgb -> blue;
 
     for (i = 0; i < times; i++) {
-        rgb = create_rgb(red, green, blue);
+        rgb_copy = create_rgb(red, green, blue);
         
-        if (rgb == NULL) { 
+        if (rgb_copy == NULL) { 
             // Clears ONLY created RGBs
             delete_rgbs(rgbs, i);
             // Exits
             return NULL;
         }
 
-        rgbs[i] = rgb;
+        rgbs[i] = rgb_copy;
     }
 
     return rgbs;

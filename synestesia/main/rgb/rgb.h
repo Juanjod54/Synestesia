@@ -4,7 +4,10 @@
  *  Filename: rgb.h 
  **/
 
-typedef _RGB RGB;
+#ifndef RGB_h
+#define RGB_h
+
+typedef struct _RGB RGB;
 
 /**
  * Allocates memory for RGB structure and sets its rgb values to the given ones
@@ -45,3 +48,5 @@ int get_green_color(RGB * rgb);
  * Returns blue color value (0 - 255)
 **/
 int get_blue_color(RGB * rgb);
+
+#endif
