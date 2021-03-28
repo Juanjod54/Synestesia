@@ -7,6 +7,8 @@
 #ifndef RGB_h
 #define RGB_h
 
+#include "Arduino.h"
+
 typedef struct _RGB RGB;
 
 /**

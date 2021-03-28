@@ -1,6 +1,6 @@
 /**
  *  Created on 03-23-2021 by Juan Jose Daza Linares
- *  Filename: rgb_light.h 
+ *  Filename: rgb_light.c 
  **/
 
 #include "rgb_light.h"
@@ -48,18 +48,20 @@ void set_rgb_light(RGB_LIGHT * rgb_light, RGB * color) {
     if (rgb_light == NULL || color == NULL) return;
 
     // Change rgb color on light. Gets pwm for each led-connection (color)
-    /*analogWrite(rgb_light -> red_con, get_pwm_for_color(get_red_color(color)));
+    analogWrite(rgb_light -> red_con, get_pwm_for_color(get_red_color(color)));
     analogWrite(rgb_light -> green_con, get_pwm_for_color(get_green_color(color)));
-    analogWrite(rgb_light -> blue_con, get_pwm_for_color(get_blue_color(color)));*/
-    Serial.println("Received color");
+    analogWrite(rgb_light -> blue_con, get_pwm_for_color(get_blue_color(color)));
+
+    Serial.println("Turn on");
 }
 
 void turn_off_rgb_light(RGB_LIGHT * rgb_light) {
-    if (rgb_light == NULL || color == NULL) return;
+    if (rgb_light == NULL) return;
 
     // Turn off pwm on each led-connection
-    /*analogWrite(rgb_light -> red_con, 0);
+    analogWrite(rgb_light -> red_con, 0);
     analogWrite(rgb_light -> green_con, 0);
-    analogWrite(rgb_light -> blue_con, 0);*/
+    analogWrite(rgb_light -> blue_con, 0);
+
     Serial.println("Turn off");
 }
