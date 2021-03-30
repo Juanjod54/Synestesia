@@ -1,3 +1,10 @@
+/***********************************
+ * # Brief
+ *    This program tests RGB and RGB_LIGHT libraries. 
+ *    It uses RGB and RGB_LIGHT libraries to create a RGB color and a RGB Light that will fade colors in a loop.
+ * # Created on 03-29-2021 by Juan Jose Daza Linares
+***********************************/
+
 #include <rgb.h>
 #include <rgb_light.h>
 
@@ -24,10 +31,7 @@ char input[15];
 void setup() {
   //For debug purposes
   Serial.begin(9600);
-
-  //Sets serial time out to one minute
-  Serial.setTimeout(60000);
-
+  
   //Creates one light
   LIGHT_1 = create_rgb_light(LIGHT_1_CON_RED, LIGHT_1_CON_GREEN, LIGHT_1_CON_BLUE);
   RGB_1 = create_rgb(LIGHT_1_RED, LIGHT_1_GREEN, LIGHT_1_BLUE);
