@@ -1,32 +1,39 @@
 if [ -d "libraries" ]
 then
-	echo "Removing existing libraries ...\n"
+	echo "Removing existing libraries ..."
 	rm -rf libraries/*
 else
-	echo "Directory libraries not found. Creating it ...\n"
+	echo "Directory libraries not found. Creating it ..."
 	mkdir libraries
 fi
 
 if ! [ -x "$(command -v zip)" ]
 then
-	echo "Could not found zip command. Installing it ...\n"
+	echo "Could not found zip command. Installing it ..."
 	sudo apt-get install zip
 fi
 
 echo "Zip main libraries"
 for lib in main/*
 do
-	echo "$(basename $lib)" 
-	zip -j libraries/"$(basename $lib).zip" $lib/*
+	if [ ! -f $lib ]
+	then
+		echo "* Zip $(basename $lib)"
+		zip -j libraries/"$(basename $lib).zip" $lib/*
+	fi
 done
 
 if [ -d "module" ]
+then
 	echo "Zip module libraries"
 	for lib in module/*
 	do
-		echo "$(basename $lib)" 
-		zip -j libraries/"$(basename $lib).zip" $lib/*
+		if [ ! -f "$lib" ]
+		then
+			echo "* Zip $(basename $lib)" 
+			zip -j libraries/"$(basename $lib).zip" $lib/*
+		fi
 	done
 fi
 
-echo "\nLibraries have been updated!\n"
+echo "Libraries have been updated!"
