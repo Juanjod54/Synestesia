@@ -1,0 +1,8 @@
+# SSID name
+SSID: Synestesia
+
+# PSWD for WiFi network. If NULL WiFi will be open
+PSWD: SYN2021
+
+# Sensorial module configuration path  (if any)
+SYNM: module/conf.syn
