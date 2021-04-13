@@ -1,6 +1,6 @@
 /**
  *  Created on 03-23-2021 by Juan Jose Daza Linares
- *  Filename: rgb.ino
+ *  Filename: rgb.cpp
  **/
 
 #include "rgb.h"
