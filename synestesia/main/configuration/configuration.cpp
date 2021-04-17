@@ -78,6 +78,8 @@ char * parse_line(char * line, char* keyword) {
  * @param: Found keyword
 */
 int is_known_field(char * keyword) {
+    if (keyword == NULL) return 0;
+    
     if (strcmp(keyword, SSID_KEYWORD)) return 1;
     if (strcmp(keyword, PASSWORD_KEYWORD)) return 1;
     
