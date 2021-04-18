@@ -225,7 +225,6 @@ Configuration * parse_configuration(char * configuration_text) {
  * Otherwise it returns a configuration object with default configuration
 */ 
 Configuration * load_defaults() {
-    return NULL;
     Configuration * configuration = create_configuration();
     if (configuration == NULL) return NULL;
     
@@ -250,23 +249,19 @@ Configuration * load_configuration() {
 
     configuration_text = read_from_file(CONFIGURATION_FILE);
     if (configuration_text == NULL) {
-        logger("Could not read configuration file. Defaults will be\n");
-        //return load_defaults();
+        logger("Could not read configuration file. Defaults will be loaded\n");
+        return load_defaults();
     }
     
     logger("> Configuration file has been loaded with no errors\n");
 
     //Parse configuration file and create Configuration object
-    //configuration = parse_configuration(configuration_text);
-    
-    configuration = create_configuration();
-    set_ssid(configuration, "SSID");
-    set_password(configuration, "PSWDSDDD");
+    configuration = parse_configuration(configuration_text);
 
     //Free configuration text
     free(configuration_text);
 
-    return (configuration == NULL) ? /*load_defaults()*/ configuration : configuration;
+    return configuration;
 }
 
 /*
@@ -303,13 +298,14 @@ void set_ssid(Configuration * configuration, char * ssid) {
     int length;
     if (configuration == NULL || ssid == NULL) return;
 
+    length = strlen(ssid);
+
     //Allocate memory for ssid
     configuration -> ssid = (char *) malloc((sizeof(configuration -> ssid[0]) * length) + 1);
     if (configuration -> ssid == NULL) { logger("Could not allocate memory for Configuration SSID\n"); }
     else {
         //Copy value
         strcpy(configuration -> ssid, ssid);
-
         logger("SSID has been set\n");
     }
 }
