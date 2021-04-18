@@ -11,14 +11,14 @@
 typedef struct _Configuration Configuration;
 
 /*
- * Loads configuration file into a new Configuration object.
+ * Loads configuration file into a new Configuration object. Loads file manager.
  * If all required fields were found and valid, it returns a new Configuration object with read configuration
  * If there is any missing field or there is any error it returns NULL
 */ 
 Configuration * load_configuration();
 
 /*
- * Frees allocated memory for configuration object
+ * Frees allocated memory for configuration object. Finishes file manager.
  * @param configuration: The configuration object to free
 */ 
 void free_configuration(Configuration * configuration);
@@ -37,7 +37,7 @@ char * get_ssid(Configuration * configuration);
  * @param configuration: The configuration object to modify
  * @param ssid: The SSID value
 */
-void * set_ssid(Configuration * configuration, char * ssid);
+void set_ssid(Configuration * configuration, char * ssid);
 
 /*
  * Gets the PASSWORD value or NULL if configuration is NULL

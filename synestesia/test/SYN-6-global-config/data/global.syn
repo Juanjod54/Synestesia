@@ -1,9 +1,4 @@
-# Global configuration for Synestesia
-# Configuration style is 
-#   Keyword : value (spaces are ignored)
-
 # SSID name
 SSID: Synestesia
-
 # PSWD for WiFi network. If NULL WiFi will be open
 PSWD: SYN2021

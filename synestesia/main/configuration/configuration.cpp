@@ -19,16 +19,17 @@
 #define CONFIGURATION_FILE "/global.syn"
 
 /* Configuration keywords */
-#define SSID_KEYWORD "SSID";
-#define PASSWORD_KEYWORD "PSWD";
+#define SSID_KEYWORD "SSID"
+#define PASSWORD_KEYWORD "PSWD"
 
-/* Configuration delimiters */
-#define LINE_DELIMITER '\n'
-#define VALUE_DELIMITER ':'
 #define COMMENT '#'
 
 /* Number of configuration fields */
 #define CONFIGURATION_FIELDS 2
+
+/* Defaults values are loaded if any error occurred */
+#define SSID_DEFAULT "Synestesia"
+#define PSWD_DEFAULT NULL
 
 
 struct _Configuration {
@@ -50,22 +51,37 @@ struct _Configuration {
  * @param line: Read line
  * @param keyword: Pointer in which found keyword will be set
 */
-char * parse_line(char * line, char* keyword) {
-    char * value;
-    
-    //Point to NULL to avoid dirty memory
-    keyword = NULL;
+char * parse_line(char * line, char** keyword) {
+    char * token = NULL;
+    char * value = NULL;
 
-    if (line == NULL) { return NULL; }
+    *keyword = NULL;
 
-    keyword = strtok(line, VALUE_DELIMITER);
-    value = strtok(line, VALUE_DELIMITER);
-
-    //If could not split line or it is a comment we'll return
-    if (keyword == NULL || strcmp(key[0], COMMENT) == 0) { 
-        keyword = NULL; 
+    if (line == NULL) { 
+        logger(">>> Ignoring line: line is NULL\n");
         return NULL; 
     }
+    else if (line[0] == COMMENT) {
+        logger(">>> Ignoring line: COMMENT FOUND\n"); 
+        return NULL;
+    }
+
+    logger(">> Line: %s\n", line);
+
+    *keyword = strtok_r(line, ":", &token);
+    value = strtok_r(NULL, ":", &token);
+
+    logger(">>> Keyword: %s\n", (*keyword == NULL) ? "NULL" : *keyword);
+    logger(">>> Value: %s\n", (value == NULL) ? "NULL" : value);
+
+    //If could not split line or it is a comment we'll return
+    if (*keyword == NULL) { 
+        logger(">>> Ignoring line: KEYWORD NOT FOUND\n");
+        *keyword = NULL; 
+        return NULL; 
+    }
+
+    free(token);
     
     return value;
 }
@@ -79,9 +95,9 @@ char * parse_line(char * line, char* keyword) {
 */
 int is_known_field(char * keyword) {
     if (keyword == NULL) return 0;
-    
-    if (strcmp(keyword, SSID_KEYWORD)) return 1;
-    if (strcmp(keyword, PASSWORD_KEYWORD)) return 1;
+
+    if (strcmp(keyword, SSID_KEYWORD) == 0) return 1;
+    if (strcmp(keyword, PASSWORD_KEYWORD) == 0) return 1;
     
     return 0;
 }
@@ -96,7 +112,7 @@ Configuration * create_configuration() {
     configuration = (Configuration *) malloc(sizeof(configuration[0]));
     
     if (configuration == NULL) { 
-        logger("Could not allocate configuration\n");
+        logger(">> Could not allocate configuration\n");
         return NULL; 
     }
 
@@ -118,24 +134,27 @@ Configuration * create_configuration() {
  * @param parsed_fields: Number of parsed values from configuration file
 */
 void * fill_configuration(Configuration * configuration, char * key, char * value, int * parsed_fields) {
-    //If configuration is null (not instantiated yet) it creates a new configuration object
-    if (configuration == NULL) { configuration = create_configuration()}
+    logger(">> Setting %s... Parsed Fields: %d\n", key, (*parsed_fields));
 
     //If there is any error during configuration object creation it returns
-    if (configuration == NULL) { return NULL; }
+    if (configuration == NULL) { 
+        logger(">>> Configuration is NULL");
+        return NULL; 
+    }
 
     /*** Keyword must exists and it must not be already defined (it would be duplicated) ***/
 
     if (strcmp(key, SSID_KEYWORD) == 0 && configuration -> ssid == NULL) {
-        (parsed_fields *)++ //Adds one to field count  
-        return set_ssid(configuration, value);
+        (* parsed_fields)++; //Adds one to field count  
+        set_ssid(configuration, value);
     } 
     else if (strcmp(key, PASSWORD_KEYWORD) == 0  && configuration -> password == NULL) {
-        (parsed_fields *)++ //Adds one to field count  
-        return set_password(configuration, value);
+        (* parsed_fields)++; //Adds one to field count  
+        set_password(configuration, value);
     } 
+    else {return NULL; }
 
-    return NULL;
+    return configuration;
 }
 
 /*
@@ -147,32 +166,46 @@ void * fill_configuration(Configuration * configuration, char * key, char * valu
 */ 
 Configuration * parse_configuration(char * configuration_text) {
     char * line;
+    char * lines;
     char * value;
     char * keyword;
 
     int parsed_fields = 0;
 
-    Configuration * configuration = NULL;
+    Configuration * configuration;
     
     if (configuration_text == NULL) { return NULL; }
 
+    configuration = create_configuration();
+    if (configuration == NULL) {
+        logger("Could not allocate configuration\n");
+        return NULL;
+    }
+
+    logger(">> Configuration text:\n%s\n\n", configuration_text);
+
     //Reads line by line
-    line = strtok(configuration_text, LINE_DELIMITER);
+    line = strtok_r(configuration_text, "\n", &lines);
 
     //Fill configuration values until we finish files or until are fields are completed
-    while (line != NULL || parsed_fields == CONFIGURATION_FIELDS) {
+    while (line != NULL || parsed_fields != CONFIGURATION_FIELDS) {
         
         //Gets value and sets to which field refers
-        value = parse_line(line, keyword);
+        value = parse_line(line, &keyword);
 
         //Checks if field is known
         if (is_known_field(keyword)) {
-            
             //Sets read field and manages parsed_fields count
             //Exits if there is any error while setting fields
-            if (fill_configuration(configuration, keyword, value, &parsed_fields) == NULL) break;
-        }
+            if (fill_configuration(configuration, keyword, value, &parsed_fields) == NULL) { break; } 
+        } else logger(">>> Unknown field %s\n", (keyword == NULL) ? "NULL" : keyword);
+
+        line = strtok_r(NULL, "\n", &lines);
     }
+
+    free(lines);
+
+    logger(">>> Parsed fields: %d\n", parsed_fields);
 
     //If configuration text has been read and the number of expected fields is different from parsed ones, it means configuration file has missing fields
     if (parsed_fields != CONFIGURATION_FIELDS) { 
@@ -186,36 +219,58 @@ Configuration * parse_configuration(char * configuration_text) {
      return configuration;
 } 
 
+/*
+ * Loads default values to a new configuration object to allow device to startup when there is any error on configuration file
+ * If there is any error during defaults loading it returns NULL
+ * Otherwise it returns a configuration object with default configuration
+*/ 
+Configuration * load_defaults() {
+    return NULL;
+    Configuration * configuration = create_configuration();
+    if (configuration == NULL) return NULL;
+    
+    set_ssid(configuration, SSID_DEFAULT);
+    set_password(configuration, PSWD_DEFAULT);
+    
+    return configuration;
+}
+
 /****  PUBLIC METHODS ****/
 
 /*
- * Loads configuration file into a new Configuration object.
+ * Loads configuration file into a new Configuration object. Loads file manager.
  * If all required fields were found and valid, it returns a new Configuration object with read configuration
  * If there is any missing field or there is any error it returns NULL
 */ 
 Configuration * load_configuration() {
+    char * configuration_text;
     Configuration * configuration;
-    char * configuration_text = read_from_file(CONFIGURATION_FILE);
+
+    init_file_manager();
+
+    configuration_text = read_from_file(CONFIGURATION_FILE);
     if (configuration_text == NULL) {
-        logger("Could not read configuration file\n");
-        return NULL;
+        logger("Could not read configuration file. Defaults will be\n");
+        //return load_defaults();
     }
     
-    logger("Configuration file has been loaded with no errors\n");
+    logger("> Configuration file has been loaded with no errors\n");
 
     //Parse configuration file and create Configuration object
-    configuration = parse_configuration(configuration);
+    //configuration = parse_configuration(configuration_text);
     
-    //Check if configuration has loaded SSID
-    if (configuration -> ssid != NULL) return configuration;
+    configuration = create_configuration();
+    set_ssid(configuration, "SSID");
+    set_password(configuration, "PSWDSDDD");
 
-    logger("SSID is NULL\n");
-    free(configuration);
-    return NULL;
+    //Free configuration text
+    free(configuration_text);
+
+    return (configuration == NULL) ? /*load_defaults()*/ configuration : configuration;
 }
 
 /*
- * Frees allocated memory for configuration object
+ * Frees allocated memory for configuration object. Finishes file manager.
  * @param configuration: The configuration object to free
 */ 
 void free_configuration(Configuration * configuration) {
@@ -224,6 +279,8 @@ void free_configuration(Configuration * configuration) {
     if (configuration -> ssid != NULL) free(configuration -> ssid);
     if (configuration -> password != NULL) free(configuration -> password);
     free(configuration);
+
+    end_file_manager();
 }
 
 /*
@@ -242,28 +299,19 @@ char * get_ssid(Configuration * configuration) {
  * @param configuration: The configuration object to modify
  * @param ssid: The SSID value
 */
-void * set_ssid(Configuration * configuration, char * ssid) {
+void set_ssid(Configuration * configuration, char * ssid) {
     int length;
-    if (configuration == NULL || ssid == NULL) return NULL;
+    if (configuration == NULL || ssid == NULL) return;
 
-    length = strlen(ssid);
-
-    if (srlen < 8) { logger("SSID length must be 8 digits or more\n"); }
+    //Allocate memory for ssid
+    configuration -> ssid = (char *) malloc((sizeof(configuration -> ssid[0]) * length) + 1);
+    if (configuration -> ssid == NULL) { logger("Could not allocate memory for Configuration SSID\n"); }
     else {
-        //Allocate memory for ssid
-        configuration -> ssid = (char *) malloc((sizeof(configuration -> ssid[0]) * length) + 1);
-        if (configuration -> ssid == NULL) { logger("Could not allocate memory for Configuration SSID\n"); }
-        else {
-            //Add str delimiter
-            configuration -> ssid [length] = '\0';
-            //Copy value
-            strcpy(configuration -> ssid, ssid);
+        //Copy value
+        strcpy(configuration -> ssid, ssid);
 
-            return configuration;
-        }
+        logger("SSID has been set\n");
     }
-
-    return NULL;
 }
 
 /*
@@ -283,23 +331,22 @@ char * get_password(Configuration * configuration) {
 */
 void set_password(Configuration * configuration, char * password) {
     int length;
-    if (configuration == NULL) return NULL;
-    //Password is optional
-    else if (password == NULL) return configuration;
+    
+    //Password is optional        
+    if (configuration == NULL || password == NULL) return;
 
     length = strlen(password);
-
-    //Allocate memory for 
-    configuration -> password = (char *) malloc((sizeof(configuration -> password[0]) * length) + 1);
-    if (configuration -> password == NULL) { logger("Could not allocate memory for Configuration PASSWORD\n"); }
+    
+    if (length < 8) { logger(">>> SSID length must be 8 digits or more\n"); }
     else {
-        //Add str delimiter
-        configuration -> password [length] = '\0';
-        //Copy value
-        strcpy(configuration -> password, password);
-
-        return configuration:
+        
+         //Allocate memory for password
+        configuration -> password = (char * ) malloc((sizeof(configuration -> password[0]) * length) + 1);    
+        if (configuration -> password == NULL) { logger("Could not allocate memory for Configuration PASSWORD\n"); }
+        else {
+            //Copy value
+            strcpy(configuration -> password, password);
+            logger("Password has been set\n");
+        }
     }
-
-    return NULL;
 }
