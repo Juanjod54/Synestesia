@@ -1,0 +1,26 @@
+20:57:04.766 -> File size 93
+20:57:04.813 -> > Configuration file has been loaded with no errors
+20:57:04.813 -> >> Configuration text:
+20:57:04.860 -> # SSID name
+20:57:04.860 -> SSID: Synestesia
+20:57:04.907 -> # PSWD for WiFi network. If NULL WiFi will be open
+20:57:04.952 -> PSWD: SYN2021
+20:57:04.952 -> 
+20:57:04.952 -> >>> Ignoring line: COMMENT FOUND
+20:57:04.999 -> >>> Unknown field NULL
+20:57:05.046 -> >> Line: SSID: Synestesia
+20:57:05.046 -> >>> Keyword: SSID
+20:57:05.046 -> >>> Value:  Synestesia
+20:57:05.093 -> >> Setting SSID... Parsed Fields: 0
+20:57:05.140 -> SSID has been set
+20:57:05.140 -> >>> Ignoring line: COMMENT FOUND
+20:57:05.187 -> >>> Unknown field NULL
+20:57:05.187 -> >> Line: PSWD: SYN2021
+20:57:05.233 -> >>> Keyword: PSWD
+20:57:05.280 -> >>> Value:  SYN2021
+20:57:05.280 -> >> Setting PSWD... Parsed Fields: 1
+20:57:05.280 -> Password has been set
+20:57:05.326 -> >>> Parsed fields: 2
+20:57:05.373 -> Configuration loaded OK
+20:57:05.373 -> SSID:  Synestesia
+20:57:05.373 -> Password:  SYN2021

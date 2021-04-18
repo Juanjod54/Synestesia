@@ -21,6 +21,7 @@
  * Starts SPIFFS system
  */
 void init_file_manager() {
+    logger("Initiating SPIFFS\n");
     SPIFFS.begin();
 }
 
