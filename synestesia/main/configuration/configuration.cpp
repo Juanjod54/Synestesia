@@ -35,56 +35,12 @@
 struct _Configuration {
     char * ssid;
     char * password;
+    void * module;
+    module_configuration_load load_module;
+    module_configuration_free free_module;
 };
 
 /****  PRIVATE METHODS ****/
-
-/*
- * TODO: REMOVE SPACES 
-
-
- * Parses a configuration file line in "keyword : value" format
- * If read line starts with comment symbol (#) it returns NULL
- * If read line is null it returns NULL
- * Otherwise it returns read value and sets keyword param to found keyword 
- * 
- * @param line: Read line
- * @param keyword: Pointer in which found keyword will be set
-*/
-char * parse_line(char * line, char** keyword) {
-    char * token = NULL;
-    char * value = NULL;
-
-    *keyword = NULL;
-
-    if (line == NULL) { 
-        logger(">>> Ignoring line: line is NULL\n");
-        return NULL; 
-    }
-    else if (line[0] == COMMENT) {
-        logger(">>> Ignoring line: COMMENT FOUND\n"); 
-        return NULL;
-    }
-
-    logger(">> Line: %s\n", line);
-
-    *keyword = strtok_r(line, ":", &token);
-    value = strtok_r(NULL, ":", &token);
-
-    logger(">>> Keyword: %s\n", (*keyword == NULL) ? "NULL" : *keyword);
-    logger(">>> Value: %s\n", (value == NULL) ? "NULL" : value);
-
-    //If could not split line or it is a comment we'll return
-    if (*keyword == NULL) { 
-        logger(">>> Ignoring line: KEYWORD NOT FOUND\n");
-        *keyword = NULL; 
-        return NULL; 
-    }
-
-    free(token);
-    
-    return value;
-}
 
 /*
  * Checks if keyword is known as a configuration keyword
@@ -241,7 +197,7 @@ Configuration * load_defaults() {
  * If all required fields were found and valid, it returns a new Configuration object with read configuration
  * If there is any missing field or there is any error it returns NULL
 */ 
-Configuration * load_configuration() {
+Configuration * load_configuration(module_configuration_load load, module_configuration_free free) {
     char * configuration_text;
     Configuration * configuration;
 
@@ -260,6 +216,15 @@ Configuration * load_configuration() {
 
     //Free configuration text
     free(configuration_text);
+
+    /*** Module load ****/
+    //Assign function pointers
+    configuration -> load_module = load;
+    configuration -> free_module = free;
+
+    //Load module configuration
+    configuration -> module =  load();
+
 
     return configuration;
 }

@@ -15,6 +15,8 @@
 #define READ_MODE "r"
 #define WRITE_MODE "w"
 
+#define COMMENT '#'
+
 #define ERROR -1
 
 /*
@@ -91,4 +93,48 @@ int write_to_file(char * path, char * content) {
     file.close();
 
     return bytes;
+}
+
+/*
+ * Parses a configuration file line in "keyword:value" format
+ * If read line starts with comment symbol (#) it returns NULL
+ * If read line is null it returns NULL
+ * Otherwise it returns read value and sets keyword param to found keyword 
+ * 
+ * @param line: Read line
+ * @param keyword: Pointer in which found keyword will be set
+*/
+char * parse_line(char * line, char** keyword) {
+    char * token = NULL;
+    char * value = NULL;
+
+    *keyword = NULL;
+
+    if (line == NULL) { 
+        logger(">>> Ignoring line: line is NULL\n");
+        return NULL; 
+    }
+    else if (line[0] == COMMENT) {
+        logger(">>> Ignoring line: COMMENT FOUND\n"); 
+        return NULL;
+    }
+
+    logger(">> Line: %s\n", line);
+
+    *keyword = strtok_r(line, ":", &token);
+    value = strtok_r(NULL, ":", &token);
+
+    logger(">>> Keyword: %s\n", (*keyword == NULL) ? "NULL" : *keyword);
+    logger(">>> Value: %s\n", (value == NULL) ? "NULL" : value);
+
+    //If could not split line or it is a comment we'll return
+    if (*keyword == NULL) { 
+        logger(">>> Ignoring line: KEYWORD NOT FOUND\n");
+        *keyword = NULL; 
+        return NULL; 
+    }
+
+    free(token);
+    
+    return value;
 }

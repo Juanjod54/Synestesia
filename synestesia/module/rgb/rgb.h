@@ -19,17 +19,17 @@ RGB * create_rgb (int red, int green, int blue);
 /**
  * Frees allocated memory for RGB and assigns given pointer to NULL
 **/ 
-void delete_rgb(RGB * rgb);
+void delete_rgb(void * rgb);
 
 /**
  * Frees allocated memory for RGB array and assigns given pointer to NULL
 **/ 
-void delete_rgbs(RGB ** rgbs, int length);
+void delete_rgbs(void ** rgbs, int length);
 
 /**
  * Creates 'times' copies of given rgb
 **/
-RGB** copy_rgb(RGB * rgb, int times);
+RGB** copy_rgb(void * rgb, int times);
 
 /**
  * Changes color of given rgb

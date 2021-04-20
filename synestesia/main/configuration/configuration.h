@@ -8,6 +8,20 @@
 
 #include "Arduino.h"
 
+/*
+ * Deallocates module_configuration object
+ * Returns a module_configuration object defined by the user 
+*/
+typedef void * (*module_configuration_load)();
+
+/*
+ * Deallocates module_configuration object
+ * @param: module_configuration object defined by the user 
+*/
+typedef void (*module_configuration_free)(void*);
+
+
+/*Configuration object*/
 typedef struct _Configuration Configuration;
 
 /*
@@ -15,7 +29,7 @@ typedef struct _Configuration Configuration;
  * If all required fields were found and valid, it returns a new Configuration object with read configuration
  * If there is any missing field or there is any error it returns NULL
 */ 
-Configuration * load_configuration();
+Configuration * load_configuration(module_configuration_load load, module_configuration_free free);
 
 /*
  * Frees allocated memory for configuration object. Finishes file manager.
@@ -53,5 +67,8 @@ char * get_password(Configuration * configuration);
  * @param password: The PASSWORD value
 */
 void set_password(Configuration * configuration, char * password);
+
+
+void * get_module_configuration(Configuration * configuration);
 
 #endif

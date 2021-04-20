@@ -38,34 +38,35 @@ RGB * create_rgb (int red, int green, int blue) {
 /**
  * Frees allocated memory for RGB and assigns given pointer to NULL
 **/ 
-void delete_rgb(RGB * rgb) {
+void delete_rgb(void * rgb) {
+    if (rgb == NULL) return;
     free(rgb);
-    rgb = NULL;
 }
 
 /**
  * Frees allocated memory for RGB array and assigns given pointer to NULL
 **/ 
-void delete_rgbs(RGB ** rgbs, int length) {
+void delete_rgbs(void ** pt_rgbs, int length) {
     int i;
-    
+    RGB ** rgbs = (RGB **) pt_rgbs;
+
     if (rgbs == NULL) return;
-    for (i = 0; i < length; i++)
-        free(rgbs[i]); 
     
+    for (i = 0; i < length; i++) free(rgbs[i]); 
     free(rgbs);
-    rgbs = NULL;
 }
 
 /**
  * Creates 'times' copies of given rgb
 **/
-RGB** copy_rgb(RGB * rgb, int times) {
+RGB** copy_rgb(void * pt_rgb, int times) {
     int i;
     int red, green, blue;
 
     RGB *rgb_copy;
     RGB **rgbs;
+    
+    RGB * rgb = (RGB *) pt_rgb;
 
     if (rgb == NULL || times < 1) return NULL;
 
@@ -82,7 +83,7 @@ RGB** copy_rgb(RGB * rgb, int times) {
         
         if (rgb_copy == NULL) { 
             // Clears ONLY created RGBs
-            delete_rgbs(rgbs, i);
+            delete_rgbs((void **) rgbs, i);
             // Exits
             return NULL;
         }

@@ -15,7 +15,7 @@ RGB_LIGHT * create_rgb_light (int red_con, int green_con, int blue_con);
 /**
  * Frees allocated memory for given RGB_LIGHT object.
 **/
-void delete_rgb_light(RGB_LIGHT * rgb_light);
+void delete_rgb_light(void * rgb_light);
 
 void set_rgb_light(RGB_LIGHT * rgb_light, RGB * color);
 
