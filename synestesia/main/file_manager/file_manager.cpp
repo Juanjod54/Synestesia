@@ -95,6 +95,21 @@ int write_to_file(char * path, char * content) {
     return bytes;
 }
 
+char * get_first_without_tabs_nor_spaces(char * str) {
+    int i;
+    char * ptr;
+
+    //Check not NULL
+    if (str == NULL) return NULL;
+
+    //Find first not NULL, not space and not tab
+    ptr = str;
+    while (ptr != NULL && (*ptr == ' ' || *ptr == '\t')) ptr ++;
+    if (ptr != NULL) return ptr; 
+
+    return str;
+} 
+
 /*
  * Parses a configuration file line in "keyword:value" format
  * If read line starts with comment symbol (#) it returns NULL
@@ -121,8 +136,12 @@ char * parse_line(char * line, char** keyword) {
 
     logger(">> Line: %s\n", line);
 
+    //Parses keyword and value without leading tabs/spaces
     *keyword = strtok_r(line, ":", &token);
+    *keyword = get_first_without_tabs_nor_spaces(*keyword);
+
     value = strtok_r(NULL, ":", &token);
+    value = get_first_without_tabs_nor_spaces(value);
 
     logger(">>> Keyword: %s\n", (*keyword == NULL) ? "NULL" : *keyword);
     logger(">>> Value: %s\n", (value == NULL) ? "NULL" : value);
@@ -138,3 +157,4 @@ char * parse_line(char * line, char** keyword) {
     
     return value;
 }
+

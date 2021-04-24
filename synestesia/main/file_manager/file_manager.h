@@ -34,6 +34,8 @@ char * read_from_file(char * path);
  */
 int write_to_file(char * path, char * content);
 
+char * get_first_without_tabs_nor_spaces(char * str);
+
 /*
  * Parses a configuration file line in "keyword:value" format
  * If read line starts with comment symbol (#) it returns NULL

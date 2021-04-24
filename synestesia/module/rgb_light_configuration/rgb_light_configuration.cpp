@@ -5,7 +5,7 @@
 
 #include <string.h>
 
-#include "map.h"
+#include "little_hash_map.h"
 #include "file_manager.h"
 
 #include "rgb.h"
@@ -20,111 +20,271 @@
 #endif
 
 #define LIGHT_KEYWORD "LIGHT"
+#define CONNECTION_KEYWORD "CONN"
 
 /* MODULE configuration file */
 #define MODULE_CONFIGURATION_FILE "/module.syn"
 
+#define MAX_LIGHTS 1
+#define MAX_COLORS 14
+#define MAX_COLORS_PER_LIGHT 14
+
 /*Module configuration object*/
 struct _RGBLightConfiguration {
-    RGB ** colors; //Colors array
-    RGB_LIGHT ** lights; //Lights array
-    Map * colors_map; // Maps a color per note
-    Map * light_colors_map; //Maps a light with a Map of colors per note
+    int n_lights;
+    LittleHashMap * colors_map; // Avoids duplicated RGB instances
+    LittleHashMap * lights_map; //LittleHashMaps a light with a LittleHashMap of colors per note
 };
 
-RGBLightConfiguration * create_rgb_configuration() {
-    RGBLightConfiguration * configuration = (RGBLightConfiguration *) malloc(sizeof(configuration[0]));
-    if (configuration == NULL) return NULL;
+//colors_map stores hash -> color, so its hash function will be the hash itself
+long colors_map_hash(void * hash) {
+    return * ((long *) hash);
+}
+
+long lights_map_hash(void * light) {
+    return get_rgb_light_hash(light);
+}
+
+
+
+int is_light_keyword(char * keyword) {
+    if (keyword == NULL) return 0;
+    if (strcmp(keyword, LIGHT_KEYWORD) == 0) return 1;
+    return 0;
+}
+
+int is_connection_keyword(char * keyword) {
+    if (keyword == NULL) return 0;
+    if (strcmp(keyword, CONNECTION_KEYWORD) == 0) return 1;
+    return 0;
+}
+
+void add_rgb_color(RGBLightConfiguration * configuration, RGB_LIGHT * light, int key, RGB * value) {
+    long color_hash;
+
+    if (configuration == NULL || light == NULL || value == NULL) return;
+    
+    logger("(add_rgb_color) Adding new color\n");
+
+    //color_hash = (long *) malloc(sizeof(color_hash[0]));
+
+    //Gets color's hash 
+    color_hash = get_rgb_hash(value);
+
+    //If colors_map does not have this color, it must be added to colors map and colors array
+    if (map_get(configuration -> colors_map, &color_hash) == NULL) {
+        //Adds to colors map
+        map_put(configuration -> colors_map, &color_hash, value);
+    }
+
+    //Get colors map for light
+    LittleHashMap * colors_per_light = (LittleHashMap *) map_get(configuration -> lights_map, light);
+    
+    if (colors_per_light != NULL) {
+        //Adds color to light's colors map
+        if (! map_put(colors_per_light, &key, value)) logger("(add_rgb_color) Could not add color to light color's map");
+    }
+    else logger("(add_rgb_color) Could not find light in lights map");
+}
+
+void add_rgb_light(RGBLightConfiguration * configuration, RGB_LIGHT * light) {
+    LittleHashMap * colors_map;
+    if (configuration == NULL || light == NULL) return;
+
+    logger("(add_rgb_light) Adding new light\n");
+
+    colors_map = create_map(colors_map_hash, free, delete_rgb, MAX_COLORS_PER_LIGHT);
+    if (colors_map == NULL) {
+        logger("(add_rgb_light) Could not create map for light's colors");
+        return;
+    }
+
+    if (! map_put(configuration -> lights_map, light, colors_map)) logger("(add_rgb_light) Could not add light to lights map");
+}
+
+RGB * parse_color(RGBLightConfiguration * configuration, char * line) {
+    long hash;
+    int r, g, b;
+    char * position;
+    char * red, * green, * blue;
+    
+    RGB * color;
+
+    red = get_first_without_tabs_nor_spaces( strtok_r(line, ",", &position) );
+    green = get_first_without_tabs_nor_spaces( strtok_r(NULL, ",", &position) );
+    blue = get_first_without_tabs_nor_spaces( strtok_r(NULL, ",", &position) );
+
+    logger("(parse_color) Read color: R:%s, G:%s, B:%s\n", red, green, blue);
+
+    r = atoi(red);
+    g = atoi(green);
+    b = atoi(blue);
+
+    //If color already exists it does not create a new one
+    hash = simulate_rgb_hash(r, g, b);
+    color = (RGB *) map_get(configuration -> colors_map, &hash);
+    
+    return (color == NULL) ? create_rgb(r, g, b) : color;
+}
+
+RGB_LIGHT * parse_light(char * line) {
+    char * position;
+    char * red_conn, * green_conn, * blue_conn;
+
+    red_conn = get_first_without_tabs_nor_spaces( strtok_r(line, ",", &position) );
+    green_conn = get_first_without_tabs_nor_spaces( strtok_r(NULL, ",", &position) );
+    blue_conn = get_first_without_tabs_nor_spaces( strtok_r(NULL, ",", &position) );
+
+    logger("(parse_light) Read connections for new light: R:%s, G:%s, B:%s\n", red_conn, green_conn, blue_conn);
+
+    return create_rgb_light(atoi(red_conn), atoi(green_conn), atoi(blue_conn));
+}
+
+void parse_light_configuration(RGBLightConfiguration * configuration, char ** position) {
+    char * line;
+    char * value;
+    char * keyword;
+    char * old_position;
+
+    RGB * color;
+    RGB_LIGHT * light;
+
+    if (configuration == NULL || position == NULL) return;
+
+    //Saves old position to continue pasing in main method
+    old_position = *position;
+    line = strtok_r(NULL, "\n", position);
+
+    while (line != NULL) {
+        
+        value = parse_line(line, &keyword);
+
+        if (keyword != NULL) {
+            if (is_light_keyword(keyword)) break;
+
+            else if (is_connection_keyword(keyword)) {
+                light = parse_light(value);
+                add_rgb_light(configuration, light);
+            }
+            else if (atoi(keyword) > 0) {
+                color = parse_color(configuration, value);
+                add_rgb_color(configuration, light, atoi(keyword), color);
+            }
+            
+        } else break;
+        
+        //Saves old position to continue parsing in main method
+        old_position = *position;
+        line = strtok_r(NULL, "\n", position);
+    }
+
+    *position = old_position;
+}
+
+RGBLightConfiguration * create_rgb_light_configuration() {
+    LittleHashMap * colors_map;
+    LittleHashMap * lights_map;
+
+    RGBLightConfiguration * configuration;
+
+    //Allocates struct 
+    configuration = (RGBLightConfiguration *) malloc(sizeof(configuration[0]));
+    if (configuration == NULL) {
+        logger("(create_rgb_light_configuration) Could not allocate rgb_configuration\n");
+        return NULL;
+    }
+
+    //Colors map: color's hash -> color (Avoid duplicating colors)
+    colors_map = create_map(colors_map_hash, free, delete_rgb, MAX_COLORS);
+    if (colors_map == NULL) {
+        logger("(create_rgb_light_configuration) Could not allocate colors_map");
+        free_module_configuration(configuration);
+        return NULL;
+    }
+
+    //Light colors map: light -> map(note -> color)
+    lights_map = create_map(lights_map_hash, delete_rgb_light, free_map, MAX_LIGHTS);
+    if (lights_map == NULL) {
+        logger("(create_rgb_light_configuration) Could not allocate lights_map");
+        free_module_configuration(configuration);
+        return NULL;
+    }
+
+    configuration -> colors_map = colors_map;
+    configuration -> lights_map = lights_map;
 
     return configuration;
 }
 
-long color_hash(void * value) {
-    const char * note = (char *) value;
-    if (note == NULL) return -1;
-    if (strcmp(note,"DO") == 0) return 0;
-    if (strcmp(note,"RE") == 0) return 1;
-    if (strcmp(note,"MI") == 0) return 2;
-    if (strcmp(note,"FA") == 0) return 3;
-    if (strcmp(note,"SOL") == 0) return 4;
-    if (strcmp(note,"LA") == 0) return 5;
-    if (strcmp(note,"SI") == 0) return 6;
-    
-    return -1;
+/*
+ * Frees allocated memory for configuration object.
+ * @param configuration: The configuration object to free
+*/ 
+void free_module_configuration(void * pt_configuration) {
+    RGBLightConfiguration * configuration = (RGBLightConfiguration *) pt_configuration;
+
+    if (configuration == NULL) return;
+    if (configuration -> colors_map != NULL) free_map(configuration -> colors_map);
+    if (configuration -> lights_map != NULL) free_map(configuration -> lights_map);
+
+    free(configuration);
 }
 
-long light_hash(void * light) {
-    if (light == NULL) return -1;
-    return 0; //VERY DUMMY
-}
 
-/** DUMMY **/
-RGBLightConfiguration * load_rgb_light_configuration() {
-    RGB ** colors;
-    RGB_LIGHT ** lights;
-
-    Map * colors_map;
-    Map * light_colors_map;
+void * load_module_configuration() {
+    char * line;
+    char * lines;
+    char * value;
+    char * keyword;
+    char * configuration_text;
 
     RGBLightConfiguration * conf; 
 
-    //7 colores
-    colors = (RGB **) malloc(sizeof(colors[0]) * 7);
-    if (colors == NULL) { return NULL; }
+    configuration_text = read_from_file(MODULE_CONFIGURATION_FILE);
+    if (configuration_text == NULL) {
+        logger("(load_rgb_light_configuration) Could not read RGBLightConfiguration file\n");
+        return NULL;
+    }
 
-    colors[0] = create_rgb(255, 255, 255);
-    colors[1] = create_rgb(0, 0, 0); 
-    colors[2] = create_rgb(0, 255, 0);
-    colors[3] = create_rgb(0, 0, 255);
-    colors[4] = create_rgb(255, 0, 0);
-    colors[5] = create_rgb(255, 255, 0);
-    colors[6] = create_rgb(0, 255, 255);
+    logger("(load_rgb_light_configuration) RGBLightConfiguration text:\n%s\n", configuration_text);
 
+    conf = create_rgb_light_configuration();
 
-    //1 luz
-    lights = (RGB_LIGHT **) malloc(sizeof(lights[0]));
-    if (lights == NULL) { return NULL;}
-    lights[0] = create_rgb_light(13, 12, 14);
+    //Reads line by line
+    line = strtok_r(configuration_text, "\n", &lines);
 
-    char * names[7] = {"DO", "RE", "MI", "FA", "SOL", "LA", "SI"};
+    //Fill configuration values until we finish files or until are fields are completed
+    while (line != NULL) {
+        
+        //Gets value and sets to which field refers
+        value = parse_line(line, &keyword);
 
-    //Mapa colores
-    colors_map = create_map(color_hash, free, delete_rgb);
-    map_put(colors_map, names[0], colors[0]);
-    map_put(colors_map, names[1], colors[1]);
-    map_put(colors_map, names[2], colors[3]);
-    map_put(colors_map, names[3], colors[2]);
-    map_put(colors_map, names[4], colors[4]);
-    map_put(colors_map, names[5], colors[5]);
-    map_put(colors_map, names[6], colors[6]);
+        //If is a light object
+        if (is_light_keyword(keyword)) {
+            parse_light_configuration(conf, &lines);
+        } 
+        else {
+            logger(">>> Configuration file not valid: Unexpected %s\n", (keyword == NULL) ? "NULL" : keyword);
+            free_module_configuration(conf);
+            return NULL;
+        }
 
-    light_colors_map = create_map(light_hash, delete_rgb_light, free_map);
-    map_put(light_colors_map, lights[0], colors_map);
+        line = strtok_r(NULL, "\n", &lines);
+    }
 
-    conf = create_rgb_configuration();
-    
-    conf -> colors = colors;
-    conf -> lights = lights;
-    conf -> colors_map = colors_map;
-    conf -> light_colors_map = light_colors_map;
+    free(lines);
+    free(configuration_text);
 
     return conf;
 
 }
 
 RGB_LIGHT ** get_lights(RGBLightConfiguration * configuration) {
-    if (configuration == NULL) { return NULL; }
-    return configuration -> lights;
+   return NULL;
 }
 
 RGB * get_color(RGBLightConfiguration * configuration, RGB_LIGHT * light, char * note) {
     if (configuration == NULL || light == NULL) { return NULL; }
-    Map * colors_per_light = (Map *) map_get(configuration -> light_colors_map, light);
+    LittleHashMap * colors_per_light = (LittleHashMap *) map_get(configuration -> lights_map, light);
     return (RGB *) map_get(colors_per_light, note);
 }
-
-/*
- * Frees allocated memory for configuration object. Finishes file manager.
- * @param configuration: The configuration object to free
-*/ 
-void free_regb_light_configuration(RGBLightConfiguration * configuration);

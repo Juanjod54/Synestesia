@@ -22,7 +22,7 @@ RGB * create_rgb (int red, int green, int blue);
 void delete_rgb(void * rgb);
 
 /**
- * Frees allocated memory for RGB array and assigns given pointer to NULL
+ * Frees allocated memory for RGB in array. Does not free array
 **/ 
 void delete_rgbs(void ** rgbs, int length);
 
@@ -50,5 +50,15 @@ int get_green_color(RGB * rgb);
  * Returns blue color value (0 - 255)
 **/
 int get_blue_color(RGB * rgb);
+
+/**
+ * Returns hash value
+**/
+long get_rgb_hash(void * pt_rgb);
+
+/**
+ * Returns hash of the RGB color if created
+ */
+long simulate_rgb_hash(int red, int green, int blue);
 
 #endif

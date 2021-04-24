@@ -1,43 +1,18 @@
+#include "configuration.h"
 #include "rgb_light_configuration.h"
 
 void setup() {
   Serial.begin(9600);
   while (!Serial) delay(500);
-  
-  RGBLightConfiguration * configuration = load_rgb_light_configuration();
-  RGB_LIGHT ** lights = get_lights(configuration);
 
-  RGB * DO = get_color(configuration, lights[0], "DO");
-  RGB * re = get_color(configuration, lights[0], "RE");
-  RGB * mi = get_color(configuration, lights[0], "MI");
-  RGB * fa = get_color(configuration, lights[0], "FA");
-  RGB * sol = get_color(configuration, lights[0], "SOL");
-  RGB * la = get_color(configuration, lights[0], "LA");
-  RGB * si = get_color(configuration, lights[0], "SI");
+  Configuration * main_conf = load_configuration_and_module(load_module_configuration, free_module_configuration);
+  RGBLightConfiguration * rgb_conf = (RGBLightConfiguration *) get_module_configuration(main_conf);
+  RGB_LIGHT ** lights = get_lights(rgb_conf);
+  RGB * color = get_color(rgb_conf, lights[0], 1);
+  Serial.println(get_red_color(color));
+  Serial.println(get_green_color(color));
+  Serial.println(get_blue_color(color));
 
-  Serial.print("Color DO: ");
-  Serial.print(get_red_color(DO));
-  Serial.print(", ");
-  Serial.print(get_green_color(DO));
-  Serial.print(", ");
-  Serial.print(get_blue_color(DO));
-  Serial.println("");
-
-  Serial.print("Color RE: ");
-  Serial.print(get_red_color(re));
-  Serial.print(", ");
-  Serial.print(get_green_color(re));
-  Serial.print(", ");
-  Serial.print(get_blue_color(re));
-  Serial.println("");
-  
-  Serial.print("Color MI: ");
-  Serial.print(get_red_color(mi));
-  Serial.print(", ");
-  Serial.print(get_green_color(mi));
-  Serial.print(", ");
-  Serial.print(get_blue_color(mi));
-  Serial.println("");
 }
 
 void loop() {

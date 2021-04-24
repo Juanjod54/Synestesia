@@ -4,15 +4,13 @@
  *  Filename: map.h 
  **/
 
-#include "map.h"
+#include "little_hash_map.h"
 
 #ifdef DEBUG_ESP_PORT
 #define logger(...) DEBUG_ESP_PORT.printf( __VA_ARGS__ )
 #else
 #define logger(...)
 #endif
-
-#define N_ELEMENTS 32
 
 /** PRIVATE **/
 
@@ -22,12 +20,15 @@ typedef struct {
     void * value;
 } KeyValue;
 
-struct _Map {
+struct _LittleHashMap {
     int n_items;
+    int max_items;
+    
     hash_function hash_fn;
     free_map_key free_key_fn;
     free_map_value free_value_fn;
-    KeyValue * key_values[N_ELEMENTS];
+
+    KeyValue ** key_values;
 };
 
 
@@ -57,14 +58,11 @@ KeyValue * create_key_value(void * key, void * value, long hash) {
 /*
  * Frees a KeyValue object, by freeing its value and key 
  */
-void free_key_value(KeyValue * key_value, free_map_key free_key_fn, free_map_value free_value_fn) {
+void free_key_value(KeyValue * key_value, free_map_key free_key, free_map_value free_value) {
     if (key_value == NULL) return;
-    
-    //Frees key
-    free_key_fn(key_value -> key);
 
-    //Frees value
-    free_value_fn(key_value -> value);
+    free_key(key_value -> key);
+    free_value(key_value -> value);
 
     //Frees object
     free(key_value);
@@ -89,6 +87,15 @@ void * get_value(KeyValue * key_value) {
 }
 
 /*
+ * Returns the key of a KeyValue object
+ * It returns NULL if KeyValue object is NULL
+*/
+void * get_key(KeyValue * key_value) {
+    if (key_value == NULL) return NULL;
+    return key_value -> key;
+}
+
+/*
  * Updates given KeyValue's value with new_value object
  * It does NOT free old value
  * Returns old KeyValue's value 
@@ -110,8 +117,10 @@ void * update_value(KeyValue * key_value, void * new_value) {
  * It returns the proper index in map structure given a hash value
  * It avoids colissions
 */
-int get_index(Map * map, long hash) {
-    int index = hash % N_ELEMENTS;
+int get_index(LittleHashMap * map, long hash) {
+    int index = hash % map->max_items;
+
+    logger("(get_index) Index: %d\n", index);
 
     //New item
     if (map -> key_values[index] == NULL) return index;
@@ -120,65 +129,79 @@ int get_index(Map * map, long hash) {
     else if (get_hash(map -> key_values[index]) == hash) return index;
 
     //Colision
-    else return get_index(map, hash * 2);
+    return get_index(map, hash * 2);
 }
 
 /** PUBLIC **/
 
 /*
- * Creates a new map object, assigning the given data type functions 
- * If any given data type function is NULL it returns NULL
+ * Creates a new map object, assigning the given hash function 
+ * This map does NOT copy objects, IT ONLY MAPS POINTERS
+ * If hash function is NULL it returns NULL
  * Otherwise it returns a map object
  * 
  * @param hash_fn: should return -1 if there is any error. Otherwise it should return a number >= 0
- * @param free_key_fn: function to free key objects
- * @param free_value_fn: function to free value objects
+ * @param max_items: max number of items that this map should contain
 */
-Map * create_map(hash_function hash_fn, free_map_key free_key_fn, free_map_value free_value_fn) {
+LittleHashMap * create_map(hash_function hash_fn, free_map_key free_key, free_map_value free_value, int max_items) {
     int i;
+    KeyValue ** key_values;
 
     //Check function pointers
-    if (hash_fn == NULL || free_key_fn == NULL || free_value_fn == NULL) {
-        logger("(create_map) Function pointers are NULL\n"); 
+    if (hash_fn == NULL || free_key == NULL || free_value == NULL || max_items <= 0) {
+        logger("(create_map) INPUT PARAM ERROR\n"); 
         return NULL;
     }
 
     //Creates map
-    Map * map = (Map *) malloc(sizeof(map[0]));
+    LittleHashMap * map = (LittleHashMap *) malloc(sizeof(map[0]));
     if (map == NULL) { 
-        logger("(create_map) Cannot allocate Map object\n");
+        logger("(create_map) Cannot allocate LittleHashMap object\n");
         return NULL; 
     }
 
+    //Creates KeyValue's array
+    key_values = (KeyValue **) malloc(sizeof(key_values[0]) * max_items);
+    if (key_values == NULL) {
+        logger("(create_map) Cannot allocate KeyValue's array\n");
+        free_map(map);
+        return NULL; 
+    }
     //Initialize key_values to NULL
-    for (i = 0; i < N_ELEMENTS; i++) { map -> key_values[i] = NULL; }
+    for(i = 0; i < max_items; i++) key_values[i] = NULL;
 
     map -> n_items = 0;
+    map -> max_items = max_items;
+
+    map -> key_values = key_values;
 
     //Assign function pointers
     map -> hash_fn = hash_fn;
-    map -> free_key_fn = free_key_fn;
-    map -> free_value_fn = free_value_fn;
+    map -> free_key_fn = free_key;
+    map -> free_value_fn = free_value;
 
     return map;
 }
 
 /*
- * Frees a map and all its content 
+ * Frees a map and its content 
 */
 void free_map(void * pt_map) {
     int item;
-    Map * map = (Map *) pt_map;
+    LittleHashMap * map = (LittleHashMap *) pt_map;
     
     if (map == NULL) { return; }
 
-    //It frees all items.
     //First version O(N) -> We dont know indexes
-    for (item = 0; item < N_ELEMENTS; item ++) {
+    //It is better to have lower performance on exit than memory overflows 
+    for (item = 0; item < map -> max_items; item ++) {
         if (map -> key_values[item] != NULL) {
             free_key_value(map->key_values[item], map -> free_key_fn, map -> free_value_fn);
         }
     }
+
+    //Frees KeyValue's array
+    free(map -> key_values);
 
     free(map);
 }   
@@ -188,21 +211,22 @@ void free_map(void * pt_map) {
  * This method does NOT copy any item.
  * For the same key it overrides the existing value. Old value is NOT freed
 */
-void map_put(Map * map, void * key, void * value) {
+int map_put(LittleHashMap * map, void * key, void * value) {
     long hash;
     int index;
 
     KeyValue * key_value;
 
     //If map is NULL or map is full it returns without adding new object
-    if (map == NULL || map->n_items == N_ELEMENTS) { 
-        logger("(map_put) Map object is NULL or full\n");
-        return; 
+    if (map == NULL || map->n_items == map->max_items) { 
+        logger("(map_put) LittleHashMap object is NULL or full\n");
+        return 0; 
     }
 
     hash = map -> hash_fn(key); //Gets hash
-    index = get_index(map, hash); //Gets index in structure
+    logger("(map_put) HASH -> %ld\n", hash);
 
+    index = get_index(map, hash); //Gets index in structure
     logger("(map_put) Got index %d\n", index);
 
     //Creates new key_value
@@ -210,7 +234,7 @@ void map_put(Map * map, void * key, void * value) {
         logger("(map_put) Creating new KeyValue object\n");
         map -> key_values[index] = create_key_value(key, value, hash);
     }
-    
+
     //Updates key_value
     else {
         logger("(map_put) Updating existing KeyValue object\n");
@@ -219,13 +243,15 @@ void map_put(Map * map, void * key, void * value) {
 
     map -> n_items ++;
 
+    return 1;
+
 }
 
 /*
  * Returns the value for a key. 
  * If there is no value it returns NULL
 */
-void * map_get(Map * map, void * key) {
+void * map_get(LittleHashMap * map, void * key) {
     long hash;
     int index;
 
@@ -233,9 +259,59 @@ void * map_get(Map * map, void * key) {
 
     if (map == NULL) return NULL;
 
-    //Get the index for the key
     hash = map -> hash_fn(key); //Gets hash
+    logger("(map_get) HASH -> %ld\n", hash);
+
     index = get_index(map, hash); //Gets index in structure
+    logger("(map_get) Got index %d\n", index);
 
     return get_value(map -> key_values[index]);
+}
+
+/**
+ * Returns an array with the keys stored in the map.
+ * LittleHashMap does NOT copy any item, so the returned keys are the stored ones
+ * If map is NULL it returns NULL
+ */ 
+void ** map_keys(LittleHashMap * map) {
+    int items;
+    int current;
+    void ** keys;
+
+    if (map == NULL) return NULL;
+
+    keys = (void **) malloc(sizeof(keys[0]) * map -> n_items);
+    if (keys == NULL) return NULL;
+
+    current = 0;
+
+    for (items = 0; items < map -> max_items; items++) {
+        if (map->key_values[items] != NULL) keys[current ++] = get_key(map -> key_values[items]);
+    }
+
+    return keys;
+}
+
+/**
+ * Returns an array with the values stored in the map.
+ * LittleHashMap does NOT copy any item, so the returned keys are the stored ones
+ * If map is NULL it returns NULL
+ */ 
+void ** map_values(LittleHashMap * map) {
+    int items;
+    int current;
+    void ** values;
+
+    if (map == NULL) return NULL;
+
+    values = (void **) malloc(sizeof(values[0]) * map -> n_items);
+    if (values == NULL) return NULL;
+
+    current = 0;
+
+    for (items = 0; items < map -> max_items; items++) {
+        if (map->key_values[items] != NULL) values[current ++] = get_value(map -> key_values[items]);
+    }
+
+    return values;
 }

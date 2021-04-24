@@ -5,15 +5,29 @@
 
 #include "rgb.h"
 
+static char hash_char[10] = {'\0'};
+
 struct _RGB{
     int red;
     int green;
     int blue;
+    long hash;
 };
 
 int is_invalid_rgb(int red, int green, int blue) {
     // Limit values
     return (red < 0 || green < 0 || blue < 0 || red > 255 || green > 255 || blue > 255);
+}
+
+long create_hash(int red, int green, int blue) {
+    long hash;
+
+    if (is_invalid_rgb(red, green, blue)) return -1;
+    
+    sprintf(hash_char, "%d%d%d", red, green, blue);
+    hash = atoi(hash_char);
+    
+    return hash;
 }
 
 /**
@@ -31,6 +45,8 @@ RGB * create_rgb (int red, int green, int blue) {
     rgb -> red = red;
     rgb -> green = green;
     rgb -> blue = blue;
+
+    rgb -> hash = create_hash(red, green, blue);
     
     return rgb; 
 }
@@ -44,8 +60,8 @@ void delete_rgb(void * rgb) {
 }
 
 /**
- * Frees allocated memory for RGB array and assigns given pointer to NULL
-**/ 
+ * Frees allocated memory for RGB in array. Does not free array
+**/
 void delete_rgbs(void ** pt_rgbs, int length) {
     int i;
     RGB ** rgbs = (RGB **) pt_rgbs;
@@ -53,7 +69,6 @@ void delete_rgbs(void ** pt_rgbs, int length) {
     if (rgbs == NULL) return;
     
     for (i = 0; i < length; i++) free(rgbs[i]); 
-    free(rgbs);
 }
 
 /**
@@ -80,13 +95,15 @@ RGB** copy_rgb(void * pt_rgb, int times) {
 
     for (i = 0; i < times; i++) {
         rgb_copy = create_rgb(red, green, blue);
-        
+    
         if (rgb_copy == NULL) { 
             // Clears ONLY created RGBs
             delete_rgbs((void **) rgbs, i);
             // Exits
             return NULL;
         }
+
+        rgb_copy -> hash = rgb -> hash;
 
         rgbs[i] = rgb_copy;
     }
@@ -104,7 +121,15 @@ RGB * set_color(RGB *rgb, int red, int green, int blue) {
     rgb -> green = green;
     rgb -> blue = blue;
 
+    rgb -> hash = create_hash(red, green, blue);
+
     return rgb;
+}
+
+int equals(RGB * rgb1, RGB * rgb2) {
+    if (rgb1 == NULL || rgb2 == NULL) return 0;
+    if (rgb1 -> hash == rgb2 -> hash == NULL) return 1;
+    return 0;
 }
 
 int get_red_color(RGB * rgb) {
@@ -117,4 +142,13 @@ int get_green_color(RGB * rgb) {
 
 int get_blue_color(RGB * rgb) {
     return (rgb == NULL) ? 0 : rgb -> blue;
+}
+
+long get_rgb_hash(void * pt_rgb) {
+    RGB * rgb = (RGB *) pt_rgb;
+    return (rgb == NULL) ? -1 : rgb -> hash;
+}
+
+long simulate_rgb_hash(int red, int green, int blue) {
+    return create_hash(red, green, blue);
 }

@@ -74,6 +74,7 @@ Configuration * create_configuration() {
 
     configuration -> ssid = NULL;
     configuration -> password = NULL;
+    configuration -> module = NULL;
 
     return configuration;
 }
@@ -144,7 +145,7 @@ Configuration * parse_configuration(char * configuration_text) {
     line = strtok_r(configuration_text, "\n", &lines);
 
     //Fill configuration values until we finish files or until are fields are completed
-    while (line != NULL || parsed_fields != CONFIGURATION_FIELDS) {
+    while (line != NULL && parsed_fields != CONFIGURATION_FIELDS) {
         
         //Gets value and sets to which field refers
         value = parse_line(line, &keyword);
@@ -197,7 +198,17 @@ Configuration * load_defaults() {
  * If all required fields were found and valid, it returns a new Configuration object with read configuration
  * If there is any missing field or there is any error it returns NULL
 */ 
-Configuration * load_configuration(module_configuration_load load, module_configuration_free free) {
+Configuration * load_configuration() {
+    return load_configuration_and_module(NULL, NULL);
+}
+
+/*
+ * Loads configuration file into a new Configuration object. Loads file manager.
+ * It uses load and free functions, if they are NOT set to NULL, to load module configuration
+ * If all required fields were found and valid, it returns a new Configuration object with read configuration
+ * If there is any missing field or there is any error it returns NULL
+*/ 
+Configuration * load_configuration_and_module(module_configuration_load load_fn, module_configuration_free free_fn) {
     char * configuration_text;
     Configuration * configuration;
 
@@ -217,14 +228,18 @@ Configuration * load_configuration(module_configuration_load load, module_config
     //Free configuration text
     free(configuration_text);
 
-    /*** Module load ****/
-    //Assign function pointers
-    configuration -> load_module = load;
-    configuration -> free_module = free;
+    /*** Module load START ****/
+    if (load_fn != NULL && free_fn != NULL && configuration != NULL) {
 
-    //Load module configuration
-    configuration -> module =  load();
+        logger("(load_configuration_and_module) Loading component\n");
+        //Assign function pointers
+        configuration -> load_module = load_fn;
+        configuration -> free_module = free_fn;
 
+        //Load module configuration
+        configuration -> module = (configuration -> load_module)();
+    }
+    /*** Module load END ****/
 
     return configuration;
 }
@@ -310,4 +325,12 @@ void set_password(Configuration * configuration, char * password) {
             logger("Password has been set\n");
         }
     }
+}
+
+/*
+ * Returns loaded module configuration object, if any.
+ * If configuration object is NULL it returns NULL
+*/ 
+void * get_module_configuration(Configuration * configuration) {
+    return (configuration == NULL) ? NULL : configuration -> module;
 }
