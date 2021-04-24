@@ -61,11 +61,27 @@ KeyValue * create_key_value(void * key, void * value, long hash) {
 void free_key_value(KeyValue * key_value, free_map_key free_key, free_map_value free_value) {
     if (key_value == NULL) return;
 
-    free_key(key_value -> key);
-    free_value(key_value -> value);
+    logger("FREEING KEYVALUE\n");
+
+    if (free_key != NULL && key_value -> key != NULL) {
+        free_key(key_value -> key);
+        key_value -> key = NULL;
+    }
+
+    logger("FREEING KEYVALUE\n");
+    
+    if (free_value != NULL && key_value -> value != NULL) {
+        free_value(key_value -> value);
+        key_value -> value = NULL;
+    }
+
+    logger("FREEING KEYVALUE\n");
 
     //Frees object
     free(key_value);
+    key_value = NULL;
+
+    logger("FREEING KEYVALUE\n");
 }
 
 /*
@@ -120,8 +136,6 @@ void * update_value(KeyValue * key_value, void * new_value) {
 int get_index(LittleHashMap * map, long hash) {
     int index = hash % map->max_items;
 
-    logger("(get_index) Index: %d\n", index);
-
     //New item
     if (map -> key_values[index] == NULL) return index;
 
@@ -141,6 +155,8 @@ int get_index(LittleHashMap * map, long hash) {
  * Otherwise it returns a map object
  * 
  * @param hash_fn: should return -1 if there is any error. Otherwise it should return a number >= 0
+ * @param free_key: Function pointer to free key. If is set to NULL, keys wont be freed
+ * @param free_key: Function pointer to free value. If is set to NULL, values wont be freed
  * @param max_items: max number of items that this map should contain
 */
 LittleHashMap * create_map(hash_function hash_fn, free_map_key free_key, free_map_value free_value, int max_items) {
@@ -148,7 +164,7 @@ LittleHashMap * create_map(hash_function hash_fn, free_map_key free_key, free_ma
     KeyValue ** key_values;
 
     //Check function pointers
-    if (hash_fn == NULL || free_key == NULL || free_value == NULL || max_items <= 0) {
+    if (hash_fn == NULL || max_items <= 0) {
         logger("(create_map) INPUT PARAM ERROR\n"); 
         return NULL;
     }
@@ -190,6 +206,8 @@ void free_map(void * pt_map) {
     int item;
     LittleHashMap * map = (LittleHashMap *) pt_map;
     
+    logger("FREEING MAP\n");
+
     if (map == NULL) { return; }
 
     //First version O(N) -> We dont know indexes
@@ -202,8 +220,10 @@ void free_map(void * pt_map) {
 
     //Frees KeyValue's array
     free(map -> key_values);
+    map -> key_values = NULL;
 
     free(map);
+    map = NULL;
 }   
 
 /*

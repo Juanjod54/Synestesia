@@ -251,9 +251,23 @@ Configuration * load_configuration_and_module(module_configuration_load load_fn,
 void free_configuration(Configuration * configuration) {
     if (configuration == NULL) return;
 
-    if (configuration -> ssid != NULL) free(configuration -> ssid);
-    if (configuration -> password != NULL) free(configuration -> password);
+    if (configuration -> ssid != NULL) {
+        free(configuration -> ssid);
+        configuration -> ssid = NULL;
+    }
+
+    if (configuration -> password != NULL) {
+        free(configuration -> password);
+        configuration -> password = NULL;
+    }
+
+    if (configuration -> module != NULL) {
+        configuration -> free_module (configuration -> module);
+        configuration -> module = NULL;
+    }
+
     free(configuration);
+    configuration = NULL;
 
     end_file_manager();
 }

@@ -57,6 +57,7 @@ RGB * create_rgb (int red, int green, int blue) {
 void delete_rgb(void * rgb) {
     if (rgb == NULL) return;
     free(rgb);
+    rgb = NULL;
 }
 
 /**
@@ -68,7 +69,10 @@ void delete_rgbs(void ** pt_rgbs, int length) {
 
     if (rgbs == NULL) return;
     
-    for (i = 0; i < length; i++) free(rgbs[i]); 
+    for (i = 0; i < length; i++) {
+        free(rgbs[i]); 
+        rgbs[i] = NULL;
+    }
 }
 
 /**

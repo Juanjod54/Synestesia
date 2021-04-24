@@ -16,6 +16,8 @@ typedef struct _LittleHashMap LittleHashMap;
  * Otherwise it returns a map object
  * 
  * @param hash_fn: should return -1 if there is any error. Otherwise it should return a number >= 0
+ * @param free_key: Function pointer to free key. If is set to NULL, keys wont be freed
+ * @param free_key: Function pointer to free value. If is set to NULL, values wont be freed
  * @param max_items: max number of items that this map should contain
 */
 LittleHashMap * create_map(hash_function hash_fn, free_map_key free_key, free_map_value free_value, int max_items);
@@ -37,3 +39,7 @@ int map_put(LittleHashMap * map, void * key, void * value);
  * If there is no value it returns NULL
 */
 void * map_get(LittleHashMap * map, void * key);
+
+void ** map_keys(LittleHashMap * map);
+
+void ** map_values(LittleHashMap * map);

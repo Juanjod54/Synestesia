@@ -30,6 +30,6 @@ void free_module_configuration(void * pt_configuration);
 
 RGB_LIGHT ** get_lights(RGBLightConfiguration * configuration);
 
-RGB * get_color(RGBLightConfiguration * configuration, RGB_LIGHT * light, char * note);
+RGB * get_color(RGBLightConfiguration * configuration, RGB_LIGHT * light, int note);
 
 #endif

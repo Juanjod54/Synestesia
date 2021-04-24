@@ -133,18 +133,13 @@ char * parse_line(char * line, char** keyword) {
         logger(">>> Ignoring line: COMMENT FOUND\n"); 
         return NULL;
     }
-
-    logger(">> Line: %s\n", line);
-
+    
     //Parses keyword and value without leading tabs/spaces
     *keyword = strtok_r(line, ":", &token);
     *keyword = get_first_without_tabs_nor_spaces(*keyword);
 
     value = strtok_r(NULL, ":", &token);
     value = get_first_without_tabs_nor_spaces(value);
-
-    logger(">>> Keyword: %s\n", (*keyword == NULL) ? "NULL" : *keyword);
-    logger(">>> Value: %s\n", (value == NULL) ? "NULL" : value);
 
     //If could not split line or it is a comment we'll return
     if (*keyword == NULL) { 

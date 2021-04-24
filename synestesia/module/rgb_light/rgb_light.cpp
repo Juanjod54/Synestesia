@@ -61,6 +61,7 @@ RGB_LIGHT * create_rgb_light (int red_conn, int green_conn, int blue_conn) {
 void delete_rgb_light(void * rgb_light) {
     if (rgb_light == NULL) return;
     free(rgb_light);
+    rgb_light = NULL;
 }
 
 /**
@@ -72,7 +73,10 @@ void delete_rgb_lights(void ** pt_rgb_lights, int length) {
 
     if (rgb_lights == NULL) return;
     
-    for (i = 0; i < length; i++) free(rgb_lights[i]); 
+    for (i = 0; i < length; i++) {
+        free(rgb_lights[i]); 
+        rgb_lights[i] = NULL;
+    }
 }
 
 void set_rgb_light(RGB_LIGHT * rgb_light, RGB * color) {
