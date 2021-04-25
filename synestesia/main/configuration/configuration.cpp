@@ -327,7 +327,10 @@ void set_password(Configuration * configuration, char * password) {
 
     length = strlen(password);
     
-    if (length < 8) { logger(">>> SSID length must be 8 digits or more\n"); }
+    if (length < 8) { 
+        logger(">>> SSID length must be 8 digits or more\n"); 
+        configuration -> password = NULL;
+    }
     else {
         
          //Allocate memory for password
