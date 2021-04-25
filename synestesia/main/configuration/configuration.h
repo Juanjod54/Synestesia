@@ -81,4 +81,8 @@ void set_password(Configuration * configuration, char * password);
 */ 
 void * get_module_configuration(Configuration * configuration);
 
+void set_domain(Configuration * configuration, char * domain);
+
+char * get_domain(Configuration * configuration);
+
 #endif

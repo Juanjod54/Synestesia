@@ -3,3 +3,6 @@ SSID: Synestesia
 
 # PSWD for WiFi network. If NULL WiFi will be open
 PSWD: SYN2021
+
+#DOMAIN NAME
+D_NAME: synestesia

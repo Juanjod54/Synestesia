@@ -21,20 +21,23 @@
 /* Configuration keywords */
 #define SSID_KEYWORD "SSID"
 #define PASSWORD_KEYWORD "PSWD"
+#define DOMAIN_KEYWORD "D_NAME"
 
 #define COMMENT '#'
 
 /* Number of configuration fields */
-#define CONFIGURATION_FIELDS 2
+#define CONFIGURATION_FIELDS 3
 
 /* Defaults values are loaded if any error occurred */
 #define SSID_DEFAULT "Synestesia"
 #define PSWD_DEFAULT NULL
+#define DOMAIN_DEFAULT "synestesia"
 
 
 struct _Configuration {
     char * ssid;
     char * password;
+    char * domain;
     void * module;
     module_configuration_load load_module;
     module_configuration_free free_module;
@@ -54,6 +57,7 @@ int is_known_field(char * keyword) {
 
     if (strcmp(keyword, SSID_KEYWORD) == 0) return 1;
     if (strcmp(keyword, PASSWORD_KEYWORD) == 0) return 1;
+    if (strcmp(keyword, DOMAIN_KEYWORD) == 0) return 1;
     
     return 0;
 }
@@ -74,6 +78,7 @@ Configuration * create_configuration() {
 
     configuration -> ssid = NULL;
     configuration -> password = NULL;
+    configuration -> domain = NULL;
     configuration -> module = NULL;
 
     return configuration;
@@ -109,6 +114,11 @@ void * fill_configuration(Configuration * configuration, char * key, char * valu
         (* parsed_fields)++; //Adds one to field count  
         set_password(configuration, value);
     } 
+    else if (strcmp(key, DOMAIN_KEYWORD) == 0  && configuration -> domain == NULL) {
+        (* parsed_fields)++; //Adds one to field count  
+        set_domain(configuration, value);
+    } 
+
     else {return NULL; }
 
     return configuration;
@@ -187,6 +197,7 @@ Configuration * load_defaults() {
     
     set_ssid(configuration, SSID_DEFAULT);
     set_password(configuration, PSWD_DEFAULT);
+    set_domain(configuration, DOMAIN_DEFAULT);
     
     return configuration;
 }
@@ -347,4 +358,22 @@ void set_password(Configuration * configuration, char * password) {
 */ 
 void * get_module_configuration(Configuration * configuration) {
     return (configuration == NULL) ? NULL : configuration -> module;
+}
+
+void set_domain(Configuration * configuration, char * domain) {
+    int length;
+    
+    if (configuration == NULL || domain == NULL) return;
+
+    configuration -> domain = (char * ) malloc((sizeof(configuration -> domain[0]) * length) + 1);    
+    if (configuration -> domain == NULL) { logger("Could not allocate memory for Configuration DOMAIN\n"); }
+    else {
+        //Copy value
+        strcpy(configuration -> domain, domain);
+        logger("Domain has been set\n");
+    }
+}
+
+char * get_domain(Configuration * configuration) {
+    return (configuration == NULL) ? NULL : configuration -> domain;
 }
