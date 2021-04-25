@@ -206,7 +206,11 @@ void free_module_configuration(void * pt_configuration) {
     configuration = NULL;
 }
 
-
+/**
+ * Loads module configuration by reading it from module configuration file
+ * If there is any error during load, it returns NULL
+ * Otherwise it returns loaded configuration
+ */
 void * load_module_configuration() {
     char * line;
     char * lines;
@@ -264,7 +268,7 @@ void * load_module_configuration() {
                 logger("(load_rgb_light_configuration) Configuration file error: Found %s, found_light flag = %d, light: %s\n", line, found_light, (light == NULL) ? "NULL" : "NOT NULL");
 
                 free_module_configuration(conf);
-                return NULL;
+                break;
             }
         } 
 
@@ -278,10 +282,17 @@ void * load_module_configuration() {
 
 }
 
+/*
+ * Returns a list of the lights stored in configuration
+*/
 RGB_LIGHT ** get_lights(RGBLightConfiguration * configuration) {
    return (RGB_LIGHT **) map_keys(configuration -> lights_map);
 }
 
+/*
+ * Returns a color for given light and note
+ * If no color was found, NULL is returned
+*/
 RGB * get_color(RGBLightConfiguration * configuration, RGB_LIGHT * light, int note) {
     if (configuration == NULL || light == NULL) { return NULL; }
     LittleHashMap * colors_per_light = (LittleHashMap *) map_get(configuration -> lights_map, light);
