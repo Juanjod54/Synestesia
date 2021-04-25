@@ -15,6 +15,8 @@
 #define READ_MODE "r"
 #define WRITE_MODE "w"
 
+#define COMMENT '#'
+
 #define ERROR -1
 
 /*
@@ -92,3 +94,62 @@ int write_to_file(char * path, char * content) {
 
     return bytes;
 }
+
+char * get_first_without_tabs_nor_spaces(char * str) {
+    int i;
+    char * ptr;
+
+    //Check not NULL
+    if (str == NULL) return NULL;
+
+    //Find first not NULL, not space and not tab
+    ptr = str;
+    while (ptr != NULL && (*ptr == ' ' || *ptr == '\t')) ptr ++;
+    if (ptr != NULL) return ptr; 
+
+    return str;
+} 
+
+/*
+ * Parses a configuration file line in "keyword:value" format
+ * If read line starts with comment symbol (#) it returns NULL
+ * If read line is null it returns NULL
+ * Otherwise it returns read value and sets keyword param to found keyword 
+ * 
+ * @param line: Read line
+ * @param keyword: Pointer in which found keyword will be set
+*/
+char * parse_line(char * line, char** keyword) {
+    char * token = NULL;
+    char * value = NULL;
+
+    *keyword = NULL;
+
+    if (line == NULL) { 
+        logger(">>> Ignoring line: line is NULL\n");
+        return NULL; 
+    }
+    else if (line[0] == COMMENT) {
+        logger(">>> Ignoring line: COMMENT FOUND\n"); 
+        return NULL;
+    }
+    
+    //Parses keyword and value without leading tabs/spaces
+    *keyword = strtok_r(line, ":", &token);
+    *keyword = get_first_without_tabs_nor_spaces(*keyword);
+
+    value = strtok_r(NULL, ":", &token);
+    value = get_first_without_tabs_nor_spaces(value);
+
+    //If could not split line or it is a comment we'll return
+    if (*keyword == NULL) { 
+        logger(">>> Ignoring line: KEYWORD NOT FOUND\n");
+        *keyword = NULL; 
+        return NULL; 
+    }
+
+    free(token);
+    
+    return value;
+}
+
