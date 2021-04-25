@@ -40,24 +40,24 @@ void create_access_point(Configuration * configuration) {
     }
 
     WiFi.mode(WIFI_AP);
-    
+
     //If password is NULL AP will be open
     ssid = get_ssid(configuration);
     password = get_password(configuration);
     logger("(create_access_point) Values\n\tSSID: %s\n\t%s\n", ssid, (password == NULL) ? "NULL" : password);
-    
+
     while(! WiFi.softAP(ssid, password)){
         logger(".");
         delay(100);
     }
-    
+
     logger("\n");
 
 
 }
 
 Wireless init_wireless(Configuration * configuration) {
-    
+
     Wireless * wireless;
 
     if (configuration == NULL) return NULL;
@@ -89,4 +89,3 @@ void handle_client() {
 void end_acces_point() {
     WiFi.softAPdisconnect(true);
 }
-

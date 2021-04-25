@@ -1,6 +1,6 @@
 /**
  *  Created on 04-25-2021 by Juan Jose Daza Linares
- *  Filename: wireless.h 
+ *  Filename: wireless.h
  **/
 
 #ifndef WIRELESS_h
