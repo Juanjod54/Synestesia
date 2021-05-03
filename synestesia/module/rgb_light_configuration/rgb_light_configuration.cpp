@@ -25,6 +25,12 @@
 /* MODULE configuration file */
 #define MODULE_CONFIGURATION_FILE "/module.syn"
 
+#define LIGHT_MARSHALL_STRUCT "%s%s:%c"
+#define CONN_MARSHALL_STRUCT "%s%s:%d,%d,%d%c"
+#define COLOR_MARSHALL_STRUCT "%s%d:%d,%d,%d%c"
+#define LAST_COLOR_MARSHALL_STRUCT "%s%d:%d,%d,%d"
+
+
 #define MAX_LIGHTS 2
 #define MAX_COLORS 14
 #define MAX_COLORS_PER_LIGHT 14
@@ -43,8 +49,6 @@ long colors_map_hash(void * hash) {
 long lights_map_hash(void * light) {
     return get_rgb_light_hash(light);
 }
-
-
 
 int is_light_keyword(char * keyword) {
     if (keyword == NULL) return 0;
@@ -113,7 +117,7 @@ RGB * parse_color(RGBLightConfiguration * configuration, char * line) {
     char * red, * green, * blue;
     
     RGB * color;
-    
+
     red = get_first_without_tabs_nor_spaces( strtok_r(line, ",", &position) );
     green = get_first_without_tabs_nor_spaces( strtok_r(NULL, ",", &position) );
     blue = get_first_without_tabs_nor_spaces( strtok_r(NULL, ",", &position) );
@@ -182,27 +186,45 @@ RGBLightConfiguration * create_rgb_light_configuration() {
 
 char * configuration_to_text(RGBLightConfiguration * configuration, char delimiter) {
     int ** notes;
-    char configuration_text[512];
+    char * empty = "";
+    char configuration_text[512] = {'\0'};
 
     RGB * color;
     RGB_LIGHT ** lights;
 
     LittleHashMap * notes_map;
 
-    int notes_index = 0;
-    int lights_index = 0;
+    int notes_size;
+    int lights_size;
+    int notes_index;
+    int lights_index;
 
-    if (configuration == NULL) return NULL;
+    if (configuration == NULL) { 
+        logger("(configuration_to_text) Configuration is NULL\n");
+        return NULL;
+    }
+    
+    lights_size = map_size(configuration -> lights_map);
+    
+    if (lights_size <= 0) { 
+        logger("(configuration_to_text) There are no lights\n");
+        return empty; 
+    }
 
+    logger("(configuration_to_text) Lights size is: %d\n", lights_size);
+    
     lights = (RGB_LIGHT **) map_keys(configuration -> lights_map);
-    if (lights == NULL) return NULL;
+    if (lights == NULL) {
+        logger("(configuration_to_text) Could not fetch lights\n");
+        return NULL;
+    }
 
     //Iterate though lights
-    while (lights[lights_index] != NULL) {
+    for (lights_index = 0; lights_index < lights_size; lights_index++) {
         //Gets notes for light at index
 
-        sprintf(configuration_text, "%s%s:%c", configuration_text, LIGHT_KEYWORD, &delimiter);
-        sprintf(configuration_text, "%s%s:%d,%d,%d%c", 
+        sprintf(configuration_text, LIGHT_MARSHALL_STRUCT, configuration_text, LIGHT_KEYWORD, &delimiter);
+        sprintf(configuration_text, CONN_MARSHALL_STRUCT, 
                 configuration_text, CONNECTION_KEYWORD, 
                 get_red_connection(lights[lights_index]), 
                 get_green_connection(lights[lights_index]), 
@@ -210,35 +232,52 @@ char * configuration_to_text(RGBLightConfiguration * configuration, char delimit
                 &delimiter);
         
         notes_map = (LittleHashMap *) map_get(configuration -> lights_map, lights[lights_index]);
-        notes = (int **) map_keys(notes_map);
+        notes_size = map_size(notes_map);
 
-        if (notes != NULL) {
+        logger("(configuration_to_text) Notes size is: %d\n", notes_size);
 
-            notes_index = 0;
-
-            while (notes[notes_index] != NULL) {
-                color = (RGB *) map_get(notes_map, notes[notes_index]);
-
-                notes_index ++; //Colors start at 1
-
-                if (color != NULL) {
-
-                    sprintf(configuration_text, "%s%d:%d,%d,%d%c", 
-                            configuration_text, notes_index, 
-                            get_red_color(color), 
-                            get_green_color(color), 
-                            get_blue_color(color), 
-                            &delimiter);
-                }
-            }
-
+        if (notes_size <= 0) {
+            logger("(configuration_to_text) There are no available notes\n");
+            continue; 
         }
 
-        lights_index++;
+        notes = (int **) map_keys(notes_map);
+        if (notes == NULL) {
+            logger("(configuration_to_text) Could not fetch notes\n");
+            free(lights); //Frees pointer to lights array only, not its content
+            return NULL;
+        }
+
+        for (notes_index = 0; notes_index < notes_size; notes_index++) {
+
+            logger("(configuration_to_text) Parsing new color\n");
+
+            color = (RGB *) map_get(notes_map, notes[notes_index]);
+
+            if (color != NULL) {
+
+                const char * marshall_struct = ((notes_index + 1) == notes_size) ? 
+                                          LAST_COLOR_MARSHALL_STRUCT : COLOR_MARSHALL_STRUCT;
+
+                sprintf(configuration_text, marshall_struct, 
+                        configuration_text, notes_index + 1, //Notes start at 1 
+                        get_red_color(color), 
+                        get_green_color(color), 
+                        get_blue_color(color), 
+                        &delimiter);
+            }
+            else {
+                logger("(configuration_to_text) Color was NULL\n");
+                continue;
+            }
+        }
+
     }
 
-    return configuration_text;
+    logger("(configuration_to_text) text: %s\n", configuration_text);
 
+    return configuration_text;
+    
 }
 
 RGBLightConfiguration * parse_rgb_light_configuration(char * configuration_text, char * delimiter) {

@@ -72,9 +72,6 @@ void handle_configuration () {
 void get_global_data () {
     char * parsed_data = marshall_global_configuration(conf);
     
-    //char * module = marshall_module_configuration(conf);
-    //logger("\n>>>>\n%s\n\n", module);
-
     if (parsed_data == NULL) { 
         web_server.send(500, "text/plain", "ERROR\r\n"); 
     }

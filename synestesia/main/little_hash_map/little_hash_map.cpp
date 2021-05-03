@@ -245,6 +245,7 @@ int map_put(LittleHashMap * map, void * key, void * value) {
     if (map -> key_values[index] == NULL) {
         logger("(map_put) Creating new KeyValue object\n");
         map -> key_values[index] = create_key_value(key, value, hash);
+        map -> n_items ++;
     }
 
     //Updates key_value
@@ -252,8 +253,6 @@ int map_put(LittleHashMap * map, void * key, void * value) {
         logger("(map_put) Updating existing KeyValue object\n");
         update_value(map -> key_values[index], value);
     } 
-
-    map -> n_items ++;
 
     return 1;
 
@@ -326,4 +325,8 @@ void ** map_values(LittleHashMap * map) {
     }
 
     return values;
+}
+
+int map_size(LittleHashMap * map) {
+    return (map == NULL) ? -1 : map -> n_items; 
 }

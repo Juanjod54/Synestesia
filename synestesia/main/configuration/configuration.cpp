@@ -291,6 +291,9 @@ Configuration * load_configuration_and_module(module_configuration_load load_fn,
         logger("(load_configuration_and_module) Loading component\n");
         //Assign function pointers
         configuration -> load_module = load_fn;
+        configuration -> save_module = save_fn;
+        configuration -> marshall_module = marshall_fn;
+        configuration -> unmarshall_module = unmarshall_fn;
         configuration -> free_module = free_fn;
 
         //Load module configuration
@@ -323,7 +326,7 @@ int save_configuration(Configuration * configuration) {
         status *= configuration -> save_module(configuration -> module);
     }
 
-    logger("(save_configuration) Could not save configuration\n");
+    if (! status) logger("(save_configuration) Could not save configuration\n");
 
     return status;
 }
