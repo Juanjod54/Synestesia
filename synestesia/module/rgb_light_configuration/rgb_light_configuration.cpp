@@ -69,10 +69,10 @@ void add_rgb_color(RGBLightConfiguration * configuration, RGB_LIGHT * light, int
     //color_hash = (long *) malloc(sizeof(color_hash[0]));
 
     //Gets color's hash 
-    color_hash_ptr = (long *) malloc(sizeof(color_hash_ptr));
+    color_hash_ptr = (long *) malloc(sizeof(color_hash_ptr[0]));
     * color_hash_ptr = get_rgb_hash(value);
 
-    key_ptr = (int *) malloc(sizeof(key_ptr));
+    key_ptr = (int *) malloc(sizeof(key_ptr[0]));
     * key_ptr = key;
 
     //If colors_map does not have this color, it must be added to colors map and colors array
@@ -113,12 +113,7 @@ RGB * parse_color(RGBLightConfiguration * configuration, char * line) {
     char * red, * green, * blue;
     
     RGB * color;
-
-    if (line == NULL) {
-        logger("(parse_color) Line is null");    
-    }
-    else {logger("(parse_color) Line :%s\n", line);}
-
+    
     red = get_first_without_tabs_nor_spaces( strtok_r(line, ",", &position) );
     green = get_first_without_tabs_nor_spaces( strtok_r(NULL, ",", &position) );
     blue = get_first_without_tabs_nor_spaces( strtok_r(NULL, ",", &position) );
@@ -246,7 +241,7 @@ char * configuration_to_text(RGBLightConfiguration * configuration, char delimit
 
 }
 
-RGBLightConfiguration * parse_configuration(char * configuration_text, char * delimiter) {
+RGBLightConfiguration * parse_rgb_light_configuration(char * configuration_text, char * delimiter) {
     char * line;
     char * lines;
     char * value;
@@ -285,7 +280,7 @@ RGBLightConfiguration * parse_configuration(char * configuration_text, char * de
                 add_rgb_light(conf, light);
             }
             else if (atoi(keyword) > 0 && light != NULL) {
-                logger("(load_rgb_light_configuration) Adding color: %s\n", value);
+                logger("(load_rgb_light_configuration) Adding color\n");
                 color = parse_color(conf, value);
                 add_rgb_color(conf, light, atoi(keyword), color);
             }
@@ -313,7 +308,7 @@ RGBLightConfiguration * parse_configuration(char * configuration_text, char * de
  * Otherwise it returns loaded configuration
  */
 void * load_rgb_light_configuration() {
-    char delimiter = '\n';
+    char * delimiter = "\n";
     char * configuration_text;
     RGBLightConfiguration * conf = NULL; 
 
@@ -325,7 +320,7 @@ void * load_rgb_light_configuration() {
 
     logger("(load_rgb_light_configuration) RGBLightConfiguration text:\n%s\n", configuration_text);
 
-    conf = parse_configuration(configuration_text, &delimiter); 
+    conf = parse_rgb_light_configuration(configuration_text, delimiter); 
     
     free(configuration_text);
 
@@ -397,5 +392,5 @@ char * marshall_rgb_light_configuration(void * pt_configuration) {
 
 void * unmarshall_rgb_light_configuration(char * configuration_text) {
     char delimiter = ';';
-    return parse_configuration(configuration_text, &delimiter);
+    return parse_rgb_light_configuration(configuration_text, &delimiter);
 }

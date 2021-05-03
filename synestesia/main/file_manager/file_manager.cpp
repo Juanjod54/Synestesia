@@ -133,8 +133,6 @@ char * parse_line(char * line, char** keyword) {
         logger("(parse_line) Ignoring line: COMMENT FOUND\n"); 
         return NULL;
     }
-    
-    logger("(parse_line) Line: %s\n", line); 
 
     //Parses keyword and value without leading tabs/spaces
     *keyword = strtok_r(line, ":", &token);
