@@ -20,16 +20,23 @@ typedef struct _RGBLightConfiguration RGBLightConfiguration;
  * If all required fields were found and valid, it returns a new Configuration object with read configuration
  * If there is any missing field or there is any error it returns NULL
 */ 
-void * load_module_configuration();
+void * load_rgb_light_configuration();
+
+int save_rgb_light_configuration(void * pt_configuration);
 
 /*
  * Frees allocated memory for configuration object. Finishes file manager.
  * @param configuration: The configuration object to free
 */ 
-void free_module_configuration(void * pt_configuration);
+void free_rgb_light_configuration(void * pt_configuration);
 
 RGB_LIGHT ** get_lights(RGBLightConfiguration * configuration);
 
 RGB * get_color(RGBLightConfiguration * configuration, RGB_LIGHT * light, int note);
+
+
+char * marshall_rgb_light_configuration(void * pt_configuration);
+
+void * unmarshall_rgb_light_configuration(char * configuration_text);
 
 #endif

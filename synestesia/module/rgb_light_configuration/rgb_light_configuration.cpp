@@ -31,7 +31,6 @@
 
 /*Module configuration object*/
 struct _RGBLightConfiguration {
-    int n_lights;
     LittleHashMap * colors_map; // Avoids duplicated RGB instances
     LittleHashMap * lights_map; //LittleHashMaps a light with a LittleHashMap of colors per note
 };
@@ -115,6 +114,11 @@ RGB * parse_color(RGBLightConfiguration * configuration, char * line) {
     
     RGB * color;
 
+    if (line == NULL) {
+        logger("(parse_color) Line is null");    
+    }
+    else {logger("(parse_color) Line :%s\n", line);}
+
     red = get_first_without_tabs_nor_spaces( strtok_r(line, ",", &position) );
     green = get_first_without_tabs_nor_spaces( strtok_r(NULL, ",", &position) );
     blue = get_first_without_tabs_nor_spaces( strtok_r(NULL, ",", &position) );
@@ -163,7 +167,7 @@ RGBLightConfiguration * create_rgb_light_configuration() {
     colors_map = create_map(colors_map_hash, free, delete_rgb, MAX_COLORS);
     if (colors_map == NULL) {
         logger("(create_rgb_light_configuration) Could not allocate colors_map");
-        free_module_configuration(configuration);
+        free_rgb_light_configuration(configuration);
         return NULL;
     }
 
@@ -171,7 +175,7 @@ RGBLightConfiguration * create_rgb_light_configuration() {
     lights_map = create_map(lights_map_hash, delete_rgb_light, free_map, MAX_LIGHTS);
     if (lights_map == NULL) {
         logger("(create_rgb_light_configuration) Could not allocate lights_map");
-        free_module_configuration(configuration);
+        free_rgb_light_configuration(configuration);
         return NULL;
     }
 
@@ -181,42 +185,72 @@ RGBLightConfiguration * create_rgb_light_configuration() {
     return configuration;
 }
 
-/*
- * Frees allocated memory for configuration object.
- * @param configuration: The configuration object to free
-*/ 
-void free_module_configuration(void * pt_configuration) {
-    RGBLightConfiguration * configuration = (RGBLightConfiguration *) pt_configuration;
+char * configuration_to_text(RGBLightConfiguration * configuration, char delimiter) {
+    int ** notes;
+    char configuration_text[512];
 
-    logger("FREEING MODULE\n");
+    RGB * color;
+    RGB_LIGHT ** lights;
 
-    if (configuration == NULL) return;
-    
-    if (configuration -> colors_map != NULL) {
-        free_map(configuration -> colors_map);
-        configuration -> colors_map = NULL;
-    } 
+    LittleHashMap * notes_map;
 
-    if (configuration -> lights_map != NULL) {
-        free_map(configuration -> lights_map);
-        configuration -> lights_map = NULL;
+    int notes_index = 0;
+    int lights_index = 0;
+
+    if (configuration == NULL) return NULL;
+
+    lights = (RGB_LIGHT **) map_keys(configuration -> lights_map);
+    if (lights == NULL) return NULL;
+
+    //Iterate though lights
+    while (lights[lights_index] != NULL) {
+        //Gets notes for light at index
+
+        sprintf(configuration_text, "%s%s:%c", configuration_text, LIGHT_KEYWORD, &delimiter);
+        sprintf(configuration_text, "%s%s:%d,%d,%d%c", 
+                configuration_text, CONNECTION_KEYWORD, 
+                get_red_connection(lights[lights_index]), 
+                get_green_connection(lights[lights_index]), 
+                get_blue_connection(lights[lights_index]), 
+                &delimiter);
+        
+        notes_map = (LittleHashMap *) map_get(configuration -> lights_map, lights[lights_index]);
+        notes = (int **) map_keys(notes_map);
+
+        if (notes != NULL) {
+
+            notes_index = 0;
+
+            while (notes[notes_index] != NULL) {
+                color = (RGB *) map_get(notes_map, notes[notes_index]);
+
+                notes_index ++; //Colors start at 1
+
+                if (color != NULL) {
+
+                    sprintf(configuration_text, "%s%d:%d,%d,%d%c", 
+                            configuration_text, notes_index, 
+                            get_red_color(color), 
+                            get_green_color(color), 
+                            get_blue_color(color), 
+                            &delimiter);
+                }
+            }
+
+        }
+
+        lights_index++;
     }
-    
-    free(configuration);
-    configuration = NULL;
+
+    return configuration_text;
+
 }
 
-/**
- * Loads module configuration by reading it from module configuration file
- * If there is any error during load, it returns NULL
- * Otherwise it returns loaded configuration
- */
-void * load_module_configuration() {
+RGBLightConfiguration * parse_configuration(char * configuration_text, char * delimiter) {
     char * line;
     char * lines;
     char * value;
     char * keyword;
-    char * configuration_text;
 
     RGB * color = NULL;
     RGB_LIGHT * light = NULL;
@@ -224,18 +258,10 @@ void * load_module_configuration() {
 
     int found_light = 0;
 
-    configuration_text = read_from_file(MODULE_CONFIGURATION_FILE);
-    if (configuration_text == NULL) {
-        logger("(load_rgb_light_configuration) Could not read RGBLightConfiguration file\n");
-        return NULL;
-    }
-
-    logger("(load_rgb_light_configuration) RGBLightConfiguration text:\n%s\n", configuration_text);
-
     conf = create_rgb_light_configuration();
 
     //Reads line by line
-    line = strtok_r(configuration_text, "\n", &lines);
+    line = strtok_r(configuration_text, delimiter, &lines);
 
     //Fill configuration values until we finish files or until are fields are completed
     while (line != NULL) {
@@ -259,27 +285,92 @@ void * load_module_configuration() {
                 add_rgb_light(conf, light);
             }
             else if (atoi(keyword) > 0 && light != NULL) {
-                logger("(load_rgb_light_configuration) Adding colors\n");
-
+                logger("(load_rgb_light_configuration) Adding color: %s\n", value);
                 color = parse_color(conf, value);
                 add_rgb_color(conf, light, atoi(keyword), color);
             }
             else {
                 logger("(load_rgb_light_configuration) Configuration file error: Found %s, found_light flag = %d, light: %s\n", line, found_light, (light == NULL) ? "NULL" : "NOT NULL");
 
-                free_module_configuration(conf);
+                free_rgb_light_configuration(conf);
                 break;
             }
         } 
 
-        line = strtok_r(NULL, "\n", &lines);
+        line = strtok_r(NULL, delimiter, &lines);
     }
 
     free(lines);
+    
+    return conf;
+}
+
+/****  PUBLIC METHODS ****/
+
+/**
+ * Loads module configuration by reading it from module configuration file
+ * If there is any error during load, it returns NULL
+ * Otherwise it returns loaded configuration
+ */
+void * load_rgb_light_configuration() {
+    char delimiter = '\n';
+    char * configuration_text;
+    RGBLightConfiguration * conf = NULL; 
+
+    configuration_text = read_from_file(MODULE_CONFIGURATION_FILE);
+    if (configuration_text == NULL) {
+        logger("(load_rgb_light_configuration) Could not read RGBLightConfiguration file\n");
+        return NULL;
+    }
+
+    logger("(load_rgb_light_configuration) RGBLightConfiguration text:\n%s\n", configuration_text);
+
+    conf = parse_configuration(configuration_text, &delimiter); 
+    
     free(configuration_text);
 
     return conf;
 
+}
+
+/*
+ * Frees allocated memory for configuration object.
+ * @param configuration: The configuration object to free
+*/ 
+void free_rgb_light_configuration(void * pt_configuration) {
+    RGBLightConfiguration * configuration = (RGBLightConfiguration *) pt_configuration;
+
+    logger("FREEING MODULE\n");
+
+    if (configuration == NULL) return;
+    
+    if (configuration -> colors_map != NULL) {
+        free_map(configuration -> colors_map);
+        configuration -> colors_map = NULL;
+    } 
+
+    if (configuration -> lights_map != NULL) {
+        free_map(configuration -> lights_map);
+        configuration -> lights_map = NULL;
+    }
+    
+    free(configuration);
+    configuration = NULL;
+}
+
+int save_rgb_light_configuration(void * pt_configuration) {
+    RGBLightConfiguration * configuration = (RGBLightConfiguration *) pt_configuration;
+    
+    char * conf_text = configuration_to_text(configuration, '\n');
+
+    if (conf_text != NULL) {
+        if (write_to_file(MODULE_CONFIGURATION_FILE, conf_text) > 0) {
+            free(conf_text);
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
 /*
@@ -297,4 +388,14 @@ RGB * get_color(RGBLightConfiguration * configuration, RGB_LIGHT * light, int no
     if (configuration == NULL || light == NULL) { return NULL; }
     LittleHashMap * colors_per_light = (LittleHashMap *) map_get(configuration -> lights_map, light);
     return (RGB *) map_get(colors_per_light, &note);
+}
+
+char * marshall_rgb_light_configuration(void * pt_configuration) {
+    RGBLightConfiguration * conf = (RGBLightConfiguration *) pt_configuration;
+    return configuration_to_text(conf, ';');
+}
+
+void * unmarshall_rgb_light_configuration(char * configuration_text) {
+    char delimiter = ';';
+    return parse_configuration(configuration_text, &delimiter);
 }

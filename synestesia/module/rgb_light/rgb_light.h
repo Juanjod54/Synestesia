@@ -17,6 +17,10 @@ RGB_LIGHT * create_rgb_light (int red_con, int green_con, int blue_con);
 **/
 void delete_rgb_light(void * rgb_light);
 
+int get_red_connection(RGB_LIGHT * rgb_light);
+int get_green_connection(RGB_LIGHT * rgb_light);
+int get_blue_connection(RGB_LIGHT * rgb_light);
+
 /**
  * Frees allocated memory for RGB_LIGHT in array. Does not free array
 **/

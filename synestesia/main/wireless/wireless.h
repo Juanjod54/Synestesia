@@ -6,22 +6,18 @@
 #ifndef WIRELESS_h
 #define WIRELESS_h
 
-#include "Arduino.h"
-#include "configuration.h"
+#include <Arduino.h>
 
-typedef struct _Wireless Wireless;
+#include "configuration.h"
 
 /**
  * Sets board as an access_point, by setting given configuration ssid and password
  * @param configuration: Configuration object
 */
-void create_access_point(Configuration * configuration);
+void start_server(Configuration * configuration);
 
-Wireless init_wireless(Configuration * configuration);
+void handle_client();
 
-/**
- * Ends access point configuration
-*/
-void end_acces_point();
+void end_server();
 
 #endif

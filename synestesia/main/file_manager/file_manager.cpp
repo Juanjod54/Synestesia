@@ -126,14 +126,16 @@ char * parse_line(char * line, char** keyword) {
     *keyword = NULL;
 
     if (line == NULL) { 
-        logger(">>> Ignoring line: line is NULL\n");
+        logger("(parse_line) Ignoring line: line is NULL\n");
         return NULL; 
     }
     else if (line[0] == COMMENT) {
-        logger(">>> Ignoring line: COMMENT FOUND\n"); 
+        logger("(parse_line) Ignoring line: COMMENT FOUND\n"); 
         return NULL;
     }
     
+    logger("(parse_line) Line: %s\n", line); 
+
     //Parses keyword and value without leading tabs/spaces
     *keyword = strtok_r(line, ":", &token);
     *keyword = get_first_without_tabs_nor_spaces(*keyword);

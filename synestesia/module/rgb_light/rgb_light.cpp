@@ -79,6 +79,18 @@ void delete_rgb_lights(void ** pt_rgb_lights, int length) {
     }
 }
 
+int get_red_connection(RGB_LIGHT * rgb_light) {
+    return (rgb_light == NULL) ? -1 : rgb_light -> red_conn;
+}
+
+int get_green_connection(RGB_LIGHT * rgb_light) {
+    return (rgb_light == NULL) ? -1 : rgb_light -> green_conn;
+}
+
+int get_blue_connection(RGB_LIGHT * rgb_light) {
+    return (rgb_light == NULL) ? -1 : rgb_light -> blue_conn;
+}
+
 void set_rgb_light(RGB_LIGHT * rgb_light, RGB * color) {
     if (rgb_light == NULL || color == NULL) return;
 
