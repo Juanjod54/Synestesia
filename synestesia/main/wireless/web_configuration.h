@@ -1,2 +1,0 @@
-
-#define configuration_html "<html><head><link rel=\"stylesheet\" href=\"/styles\"/></head><body><h1>Synestesia</h1><iframe src=\"/global\" class=\"width:100%;\"></iframe><iframe src=\"/module\" class=\"width:100%;\"></iframe></body></html>"

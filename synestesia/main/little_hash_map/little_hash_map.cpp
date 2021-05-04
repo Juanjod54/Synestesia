@@ -61,12 +61,12 @@ KeyValue * create_key_value(void * key, void * value, long hash) {
 void free_key_value(KeyValue * key_value, free_map_key free_key, free_map_value free_value) {
     if (key_value == NULL) return;
 
-    if (!key_value -> key) {
+    if (key_value -> key) {
         free_key(key_value -> key);
         key_value -> key = NULL;
     }
     
-    if (!key_value -> value) {
+    if (key_value -> value) {
         free_value(key_value -> value);
         key_value -> value = NULL;
     }
@@ -268,7 +268,7 @@ void * map_get(LittleHashMap * map, void * key) {
 
     KeyValue * key_value;
 
-    if (map == NULL) return NULL;
+    if (map == NULL || key == NULL) return NULL;
 
     hash = map -> hash_fn(key); //Gets hash
     logger("(map_get) HASH -> %ld\n", hash);

@@ -308,17 +308,9 @@ Configuration * load_configuration_and_module(module_configuration_load load_fn,
  * Saves global and module configuration objects into disk
 */
 int save_configuration(Configuration * configuration) {
-    int status = 0;
-    char * conf_text = global_configuration_to_text(configuration, '\n');
-
-    if (conf_text != NULL) {
-        if (write_to_file(GLOBAL_CONFIGURATION_FILE, conf_text) > 0) {
-            free(conf_text);
-            
-            //Flag
-            status = 1; 
-        }
-    }
+    int status;
+    
+    status = save_global_configuration(configuration);
 
     //Saves module configuration if exists
     if (configuration -> module != NULL) {
@@ -329,6 +321,19 @@ int save_configuration(Configuration * configuration) {
     if (! status) logger("(save_configuration) Could not save configuration\n");
 
     return status;
+}
+
+int save_global_configuration(Configuration * configuration) {
+    char * conf_text = global_configuration_to_text(configuration, '\n');
+
+    if (conf_text != NULL) {
+        if (write_to_file(GLOBAL_CONFIGURATION_FILE, conf_text) > 0) {
+            free(conf_text);
+            return 1; 
+        }
+    }
+
+    return 0;
 }
 
 /*
@@ -537,6 +542,10 @@ void * get_module_configuration(Configuration * configuration) {
     return (configuration == NULL) ? NULL : configuration -> module;
 }
 
+int save_module_configuration(Configuration * configuration) {
+    return (configuration == NULL) ? -1 : configuration -> save_module(configuration -> module);
+}
+
 /*
  * Frees allocated memory for module configuration object.
  * @param configuration: The configuration object which has the module to free
@@ -556,4 +565,19 @@ void free_module(Configuration * configuration) {
 char * marshall_module_configuration(Configuration * configuration) {
     if (configuration == NULL) return NULL;
     return configuration -> marshall_module(configuration -> module);
+}
+
+/*
+ * Saves a module configuration object into a text file
+*/
+Configuration * unmarshall_module_configuration(Configuration * configuration, char * configuration_text) {
+    if (configuration == NULL || configuration_text == NULL) return NULL;
+    void * module = configuration -> unmarshall_module (configuration_text);
+    
+    if (module == NULL) { return NULL; }
+    
+    //free_module(configuration);
+    configuration -> module = module;
+    return configuration;
+
 }

@@ -63,9 +63,11 @@ Configuration * load_configuration_and_module(module_configuration_load load_fn,
                                               module_configuration_free free_fn);
 
 /*
- * Saves global and module configuration objects into disk
+ * Saves global configuration object into disk
 */
 int save_configuration(Configuration * configuration);
+
+int save_global_configuration(Configuration * configuration);
 
 /*
  * Frees allocated memory for global and module configuration objects.
@@ -150,6 +152,8 @@ void update_global_configuration_module_references(Configuration * old_configura
 */ 
 void * get_module_configuration(Configuration * configuration);
 
+int save_module_configuration(Configuration * configuration);
+
 /*
  * Frees allocated memory for module configuration object.
  * @param configuration: The configuration object which has the module to free
@@ -164,6 +168,6 @@ char * marshall_module_configuration(Configuration * configuration);
 /*
  * Loads module configuration from a text file 
 */
-/*int unmarshall_module_configuration(Configuration * configuration, char * configuration_text);*/
+Configuration * unmarshall_module_configuration(Configuration * configuration, char * configuration_text);
 
 #endif

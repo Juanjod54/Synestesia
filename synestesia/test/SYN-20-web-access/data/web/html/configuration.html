@@ -1,0 +1,35 @@
+<html>
+    <head>
+        <script src="/vue"></script>
+        <script src="/global"></script>
+        <script src="/module"></script>
+        <script src="/scripts"></script>
+
+        <link rel="stylesheet" href="/styles"/>
+    </head>
+    <body>
+        <h1>Synestesia</h1>
+        <div id="app">
+            <h2>Global</h2>
+            <global-component ref="global"></global-component>
+            <h2>Module</h2>
+            <module-component ref="module"></module-component>
+            <button type="button" class="btn btn-primary btn-lg btn-block" v-on:click="saveConfiguration()">Save</button>
+        </div>
+    </body>    
+    
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {},
+            methods: {
+                saveConfiguration() {
+                    this.$refs.global.save();
+                    this.$refs.module.save();
+                }
+            }
+        });
+
+    </script>
+</html>
+

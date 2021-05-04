@@ -1,1 +1,0 @@
-#define scripts_js "function requestToServer(method, url, callback, body) { var xmlHttp = new XMLHttpRequest(); xmlHttp.onload = function() { if (callback !== null && callback !== undefined) { if (xmlHttp.readyState == 4 && xmlHttp.status == 200) { callback(xmlHttp.responseText); } else { callback(null); }}}; xmlHttp.open(method, url, true); xmlHttp.send(body);}"
