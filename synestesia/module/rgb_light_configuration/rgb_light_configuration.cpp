@@ -305,6 +305,13 @@ RGBLightConfiguration * parse_rgb_light_configuration(char * configuration_text,
 
     int found_light = 0;
 
+    if (configuration_text == NULL || delimiter == NULL)  {
+        logger("(parse_configuration) Found NULL on input params\n");
+        return NULL;
+    }
+
+    logger("(parse_configuration) Configuration text:\n%s\n", configuration_text);
+
     conf = create_rgb_light_configuration();
 
     //Reads line by line
@@ -319,7 +326,7 @@ RGBLightConfiguration * parse_rgb_light_configuration(char * configuration_text,
         if (keyword != NULL) {
 
             if (is_light_keyword(keyword) && found_light == 0) {
-                logger("(load_rgb_light_configuration) New LIGHT keyword found\n");
+                logger("(parse_rgb_light_configuration) New LIGHT keyword found\n");
 
                 light = NULL;
                 found_light = 1;
@@ -327,19 +334,19 @@ RGBLightConfiguration * parse_rgb_light_configuration(char * configuration_text,
             else if (value != NULL) {
                 
                 if (is_connection_keyword(keyword) && found_light == 1 && light == NULL) {
-                    logger("(load_rgb_light_configuration) Setting light connection\n");
+                    logger("(parse_rgb_light_configuration) Setting light connection\n");
 
                     found_light = 0;
                     light = parse_light(value);
                     add_rgb_light(conf, light);
                 }
                 else if (atoi(keyword) > 0 && light != NULL) {
-                    logger("(load_rgb_light_configuration) Adding color\n");
+                    logger("(parse_rgb_light_configuration) Adding color\n");
                     color = parse_color(conf, value);
                     add_rgb_color(conf, light, atoi(keyword), color);
                 }
                 else {
-                    logger("(load_rgb_light_configuration) Configuration file error: Found %s, found_light flag = %d, light: %s\n", line, found_light, (light == NULL) ? "NULL" : "NOT NULL");
+                    logger("(parse_rgb_light_configuration) Configuration file error: Found %s, found_light flag = %d, light: %s\n", line, found_light, (light == NULL) ? "NULL" : "NOT NULL");
 
                     free_rgb_light_configuration(conf);
                     break;
@@ -373,8 +380,6 @@ void * load_rgb_light_configuration() {
         logger("(load_rgb_light_configuration) Could not read RGBLightConfiguration file\n");
         return NULL;
     }
-
-    logger("(load_rgb_light_configuration) RGBLightConfiguration text:\n%s\n", configuration_text);
 
     conf = parse_rgb_light_configuration(configuration_text, delimiter); 
     
@@ -449,7 +454,5 @@ char * marshall_rgb_light_configuration(void * pt_configuration) {
 
 void * unmarshall_rgb_light_configuration(char * configuration_text) {
     char delimiter = ';';
-    if (configuration_text) logger("text: %s\n", configuration_text);
-    else logger("is null\n");
     return parse_rgb_light_configuration(configuration_text, &delimiter);
 }

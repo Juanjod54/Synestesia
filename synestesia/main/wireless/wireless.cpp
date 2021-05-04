@@ -92,7 +92,7 @@ void save_global_data() {
 void save_module_data() {
     //Gets module configuration text from body
     char * module_text = (char *) web_server.arg("plain").c_str();
-    
+
     //Unmarshalls it
     Configuration * new_configuration = unmarshall_module_configuration(conf, module_text);
     

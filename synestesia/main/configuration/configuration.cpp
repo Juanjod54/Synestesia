@@ -572,6 +572,11 @@ char * marshall_module_configuration(Configuration * configuration) {
 */
 Configuration * unmarshall_module_configuration(Configuration * configuration, char * configuration_text) {
     if (configuration == NULL || configuration_text == NULL) return NULL;
+
+    logger("SASA\n");
+
+    if (configuration -> unmarshall_module == NULL) logger("SASAAAA!!\n");
+
     void * module = configuration -> unmarshall_module (configuration_text);
     
     if (module == NULL) { return NULL; }
