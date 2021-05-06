@@ -2,27 +2,29 @@
 Vue.component('ModuleComponent', {
     data: function () { 
         return {
-            lights: [],
             notes_map: ["do", "re", "mi", "fa", "sol", "la", "si", "DO", "RE", "MI", "FA", "SOL", "LA", "SI"],
-            connection_template: "LIGHT:;CONN:${red},${green},${blue};",
-            color_template: "${note}:${red},${green},${blue};"
+            connection_template: "LIGHT:${delimiter}CONN:${red},${green},${blue}${delimiter}",
+            color_template: "${note}:${red},${green},${blue}${delimiter}",
+            delimiter: '$',
+            lights: []
         }
     },
     created: function () {    
         requestToServer('GET', "/module-data", this.onFetchModuleData, null);
     },
     methods: {
-        save: function() {
-            requestToServer('POST', "/module-data", null, this.marshallValues());
-        },
-
+        
         marshallValues: function () {
             var body = "";
             for (var li = 0; li < this.lights.length; li++) {
                 var light = this.lights[li];
-                body += renderTemplate(this.connection_template, light.CONN);
+                var light_parse = {delimiter: this.delimiter, note: ci};
+                Object.assign(light_parse, light.CONN);
+                body += renderTemplate(this.connection_template, light_parse);
                 for (var ci in light.colors) {
-                    body += renderTemplate(this.color_template, light.colors[ci]);
+                    var color_parse = {delimiter: this.delimiter, note: ci};
+                    Object.assign(color_parse, light.colors[ci]);
+                    body += renderTemplate(this.color_template, color_parse);
                 }
             }
 
@@ -35,7 +37,7 @@ Vue.component('ModuleComponent', {
 
             if (text === null) return; 
     
-            var keyValuesList = text.split(";");
+            var keyValuesList = text.split(this.delimiter);
 
             for (var i = 0; i < keyValuesList.length; i++) {
                 var key_and_value = keyValuesList[i].split(":");
@@ -63,7 +65,6 @@ Vue.component('ModuleComponent', {
                     if (light.colors === undefined) light.colors = {};
                     
                     light.colors[key] = {
-                        note: key,
                         red: colors[0],
                         green: colors[1],
                         blue: colors[2]

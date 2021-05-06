@@ -2,6 +2,7 @@
 Vue.component('global-component', {
     data: function() {
         return {
+            delimiter: '$',
             SSID: "",
             PSWD: "",
             ADM: ""
@@ -11,14 +12,11 @@ Vue.component('global-component', {
         requestToServer('GET', "/global-data", this.onFetchGlobalData, null);
     },
     methods: {
-        save: function() {
-            requestToServer('POST', "/global-data", null, this.marshallValues());
-        },
-
+        
         marshallValues: function () {
             var body = "";
-            body += "SSID:" + this.SSID + ";";
-            body += "PSWD:" + this.PSWD + ";";
+            body += "SSID:" + this.SSID + this.delimiter;
+            body += "PSWD:" + this.PSWD + this.delimiter;
             body += "ADM:" + this.ADM;
 
             return body;
@@ -26,7 +24,7 @@ Vue.component('global-component', {
 
         onFetchGlobalData: function(text) {
             if (text !== null) {
-                var keyValuesList = text.split(";");
+                var keyValuesList = text.split(this.delimiter);
                 for (var i = 0; i < keyValuesList.length; i++) {
                     var keyValue = keyValuesList[i].split(":"); 
                     if (keyValue[0] === "SSID") this.SSID = keyValue[1];

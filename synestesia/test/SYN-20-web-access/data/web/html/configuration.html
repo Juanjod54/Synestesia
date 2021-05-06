@@ -19,13 +19,17 @@
     </body>    
     
     <script>
+        
         var app = new Vue({
             el: '#app',
             data: {},
             methods: {
                 saveConfiguration() {
-                    this.$refs.global.save();
-                    this.$refs.module.save();
+                    var params = "global=${global}&module=${module}";
+                    var global = this.$refs.global.marshallValues();
+                    var module = this.$refs.module.marshallValues();
+                    var body = renderTemplate(params, {global: global, module: module});
+                    requestToServer('POST', "/configuration", null, body, [{header: "Content-Type", value: "application/x-www-form-urlencoded"}]);
                 }
             }
         });
