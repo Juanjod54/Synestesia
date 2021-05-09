@@ -143,13 +143,13 @@ char * parse_line(char * line, char** keyword) {
 
     //If could not split line or it is a comment we'll return
     if (*keyword == NULL) { 
-        logger(">>> Ignoring line: KEYWORD NOT FOUND\n");
+        logger("(parse_line) Ignoring line: KEYWORD NOT FOUND\n");
         *keyword = NULL; 
         return NULL; 
     }
 
-    free(token);
-    
+    logger("AIUDA: KEY : %s\n", *keyword);
+
     return value;
 }
 

@@ -26,6 +26,8 @@
 
 #define MODULE_HTML "/module.html"
 
+#define OK "OK"
+#define ERROR "ERROR"
 
 static int AP_SET = 0;
 static int session;
@@ -41,7 +43,7 @@ void get_global_data () {
     char * parsed_data = marshall_global_configuration(conf);
     
     if (parsed_data == NULL) { 
-        web_server.send(500, PLAIN, "ERROR\r\n"); 
+        web_server.send(500, PLAIN, ERROR); 
     }
     else { 
         web_server.send(200, PLAIN, parsed_data); 
@@ -52,7 +54,7 @@ void get_global_data () {
 void get_module_data () {
     char * parsed_data = marshall_module_configuration(conf);
     if (parsed_data == NULL) { 
-        web_server.send(500, PLAIN, "ERROR\r\n"); 
+        web_server.send(500, PLAIN, ERROR); 
     }
     else { 
         web_server.send(200, PLAIN, parsed_data); 
@@ -60,51 +62,38 @@ void get_module_data () {
     }    
 }
 
-/*
- * HANDLER
- * Parses global configuration text into an object and saves it
- * It updates this class reference to configuration object and frees the old one
-*/
-void save_global_data() {
-    //Gets global configuration text from body
-    char * global_text = (char *) web_server.arg("plain").c_str();
-    
-    //Unmarshalls it
-    Configuration * new_configuration = unmarshall_global_configuration(global_text);
-    
-    //If unmarshalled configuration its ok and it could be saved
-    if (new_configuration != NULL && save_global_configuration(new_configuration)) {
+void wireless_save_configuration() {
+    char * global_text = NULL;
+    char * module_text = NULL;
 
+    Configuration * new_configuration = NULL;
+    
+    global_text = (char *) web_server.arg("global").c_str();
+    new_configuration = unmarshall_global_configuration(global_text);
+
+    if (get_module_configuration(conf) != NULL) {
+        module_text = (char *) web_server.arg("module").c_str();
+
+        //Updates module references
+        update_global_configuration_module_references(conf, new_configuration);
+
+        //Unmarshalls module
+        new_configuration = unmarshall_module_configuration(new_configuration, module_text);
+    }
+
+    if (new_configuration != NULL && save_configuration(new_configuration)) {
         //Frees global configuration object
-        free_global(conf);
+        free_configuration(conf);
 
         //Update configuration reference
         conf = new_configuration;
 
-        web_server.send(200, PLAIN, "OK\r\n");
+        web_server.send(200, PLAIN, OK);
         return;
     }
 
     //There was an error
-    web_server.send(500, PLAIN, "ERROR\r\n");
-}
-
-void save_module_data() {
-    //Gets module configuration text from body
-    char * module_text = (char *) web_server.arg("plain").c_str();
-
-    //Unmarshalls it
-    Configuration * new_configuration = unmarshall_module_configuration(conf, module_text);
-    
-    //If unmarshalled configuration its ok and it could be saved
-    if (new_configuration != NULL && save_module_configuration(new_configuration)) {
-        
-        web_server.send(200, "text/plain", "OK\r\n");
-        return;
-    }
-
-    //There was an error
-    web_server.send(500, "text/plain", "OK\r\n");
+    web_server.send(500, PLAIN, ERROR);
 }
 
 /************* OTHER HANDLERS *************/
@@ -196,9 +185,11 @@ void start_server(Configuration * configuration) {
     web_server.on("/global-data", HTTP_GET, get_global_data);
     web_server.on("/module-data", HTTP_GET, get_module_data);
 
+    web_server.on("/configuration", HTTP_POST, wireless_save_configuration);
+
     //Unmarshalls configuration data and saves it
-    web_server.on("/global-data", HTTP_POST, save_global_data);
-    web_server.on("/module-data", HTTP_POST, save_module_data);
+    //web_server.on("/global-data", HTTP_POST, save_global_data);
+    //web_server.on("/module-data", HTTP_POST, save_module_data);
     
     web_server.begin();
 }

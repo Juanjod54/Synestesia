@@ -32,7 +32,7 @@ void free_rgb_light_configuration(void * pt_configuration);
 
 RGB_LIGHT ** get_lights(RGBLightConfiguration * configuration);
 
-RGB * get_color(RGBLightConfiguration * configuration, RGB_LIGHT * light, int note);
+RGB * get_color(RGBLightConfiguration * configuration, RGB_LIGHT * light, int * note);
 
 
 char * marshall_rgb_light_configuration(void * pt_configuration);

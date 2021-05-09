@@ -59,14 +59,14 @@ KeyValue * create_key_value(void * key, void * value, long hash) {
  * Frees a KeyValue object, by freeing its value and key 
  */
 void free_key_value(KeyValue * key_value, free_map_key free_key, free_map_value free_value) {
-    if (key_value == NULL) return;
+    if (!key_value) return;
 
-    if (key_value -> key) {
+    if (! (!key_value -> key)) {
         free_key(key_value -> key);
         key_value -> key = NULL;
     }
     
-    if (key_value -> value) {
+    if (! (!key_value -> value)) {
         free_value(key_value -> value);
         key_value -> value = NULL;
     }
@@ -198,14 +198,12 @@ void free_map(void * pt_map) {
     int item;
     LittleHashMap * map = (LittleHashMap *) pt_map;
     
-    logger("FREEING MAP\n");
-
-    if (map == NULL) { return; }
+    if (!map) { return; }
 
     //First version O(N) -> We dont know indexes
     //It is better to have lower performance on exit than memory overflows 
     for (item = 0; item < map -> max_items; item ++) {
-        if (map -> key_values[item] != NULL) {
+        if (map -> key_values[item]) {
             free_key_value(map->key_values[item], map -> free_key_fn, map -> free_value_fn);
         }
     }
@@ -236,21 +234,17 @@ int map_put(LittleHashMap * map, void * key, void * value) {
     }
 
     hash = map -> hash_fn(key); //Gets hash
-    logger("(map_put) HASH -> %ld\n", hash);
-
+    
     index = get_index(map, hash); //Gets index in structure
-    logger("(map_put) Got index %d\n", index);
-
+    
     //Creates new key_value
     if (map -> key_values[index] == NULL) {
-        logger("(map_put) Creating new KeyValue object\n");
         map -> key_values[index] = create_key_value(key, value, hash);
         map -> n_items ++;
     }
 
     //Updates key_value
     else {
-        logger("(map_put) Updating existing KeyValue object\n");
         update_value(map -> key_values[index], value);
     } 
 
@@ -271,11 +265,9 @@ void * map_get(LittleHashMap * map, void * key) {
     if (map == NULL || key == NULL) return NULL;
 
     hash = map -> hash_fn(key); //Gets hash
-    logger("(map_get) HASH -> %ld\n", hash);
 
     index = get_index(map, hash); //Gets index in structure
-    logger("(map_get) Got index %d\n", index);
-
+    
     return get_value(map -> key_values[index]);
 }
 

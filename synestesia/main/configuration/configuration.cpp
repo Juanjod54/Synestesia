@@ -24,6 +24,7 @@
 #define ADMIN_PASSWORD_KEYWORD "ADM"
 
 #define COMMENT '#'
+#define DELIMITER_CHARACTER '$'
 
 /* Number of fields in global parsing */
 #define MOCK_SIZE 16
@@ -173,8 +174,6 @@ Configuration * parse_configuration(char * configuration_text, char * delimiter)
         line = strtok_r(NULL, delimiter, &lines);
     }
 
-    free(lines);
-
     logger("(parse_configuration) Parsed fields: %d\n", parsed_fields);
 
     //If configuration text has been read and the number of expected fields is different from parsed ones, it means configuration file has missing fields
@@ -182,7 +181,7 @@ Configuration * parse_configuration(char * configuration_text, char * delimiter)
         logger("(parse_configuration) Configuration error: could not find all required fields\n");
         
         //Frees allocated memory and returns
-        free_configuration(configuration);
+        free_global(configuration);
         return NULL;
      }
 
@@ -505,14 +504,14 @@ int set_admin_password(Configuration * configuration, char * admin_password) {
  * Saves a configuration object into a text file, delimiting fields by ';'
 */
 char * marshall_global_configuration(Configuration * configuration) {
-    return global_configuration_to_text(configuration, ';');
+    return global_configuration_to_text(configuration, DELIMITER_CHARACTER);
 }
 
 /*
  * Loads global configuration from a text file, in which fields are delimited by 
 */
 Configuration * unmarshall_global_configuration(char * configuration_text) {
-    char delimiter = ';';
+    char delimiter = DELIMITER_CHARACTER;
     return parse_configuration(configuration_text, &delimiter);
 }
 
@@ -556,6 +555,11 @@ void free_module(Configuration * configuration) {
     if (configuration -> module) {
         configuration -> free_module (configuration -> module);
         configuration -> module = NULL;
+        configuration -> load_module = NULL;
+        configuration -> save_module = NULL;
+        configuration -> marshall_module = NULL;
+        configuration -> unmarshall_module = NULL;
+        configuration -> free_module = NULL;
     }
 }
 
@@ -571,17 +575,12 @@ char * marshall_module_configuration(Configuration * configuration) {
  * Saves a module configuration object into a text file
 */
 Configuration * unmarshall_module_configuration(Configuration * configuration, char * configuration_text) {
-    if (configuration == NULL || configuration_text == NULL) return NULL;
+    if (configuration == NULL || configuration_text == NULL || !(configuration -> unmarshall_module)) return NULL;
 
-    logger("SASA\n");
+    void * module = (configuration -> unmarshall_module) (configuration_text);
 
-    if (configuration -> unmarshall_module == NULL) logger("SASAAAA!!\n");
-
-    void * module = configuration -> unmarshall_module (configuration_text);
-    
     if (module == NULL) { return NULL; }
     
-    //free_module(configuration);
     configuration -> module = module;
     return configuration;
 

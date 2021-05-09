@@ -1,8 +1,1 @@
-function requestToServer(method, url, callback, body, headers) { var xmlHttp = new XMLHttpRequest(); xmlHttp.onload = function() { if (callback !== null && callback !== undefined) { if (xmlHttp.readyState == 4 && xmlHttp.status == 200) { callback(xmlHttp.responseText); } else { callback(null); }}}; xmlHttp.open(method, url, true); 
-
-if (headers !== undefined && headers !== null) {
-    for (var i = 0; i < headers.length; i++) { xmlHttp.setRequestHeader(headers[i].header, headers[i].value); }
-}
-
-xmlHttp.send(body);}
-function renderTemplate(template, object) { return template.replace(/\${(\w+)}/g, (_, v) => object[v]); }
+function requestToServer(e,n,t,r,u){var a=new XMLHttpRequest;if(a.onload=function(){null!=t&&(4==a.readyState&&200==a.status?t(a.responseText):t(null))},a.open(e,n,!0),null!=u)for(var l=0;l<u.length;l++)a.setRequestHeader(u[l].header,u[l].value);a.send(r)}function renderTemplate(e,n){return e.replace(/\${(\w+)}/g,((e,t)=>n[t]))}

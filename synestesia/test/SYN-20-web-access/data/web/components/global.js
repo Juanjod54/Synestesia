@@ -2,6 +2,11 @@
 Vue.component('global-component', {
     data: function() {
         return {
+            validations: {
+                component: true,
+                ssid: true,
+                pswd: true
+            },
             delimiter: '$',
             SSID: "",
             PSWD: "",
@@ -10,6 +15,20 @@ Vue.component('global-component', {
     },
     created: function () {    
         requestToServer('GET', "/global-data", this.onFetchGlobalData, null);
+    },
+    computed : {
+        validSSID () {
+            this.validations.ssid = this.SSID !== "" && this.SSID.length < 12;
+            this.validations.component = this.validations.ssid && this.validations.pswd;
+            this.$emit("validation", this.validations.component);
+            return this.validations.ssid;
+        },
+        validPSWD() {
+            this.validations.pswd = this.PSWD == "" || this.PSWD.length == 8;
+            this.validation = this.validations.ssid && this.validations.pswd;
+            this.$emit("validation", this.validations.component);
+            return this.validations.pswd;
+        }
     },
     methods: {
         
@@ -35,15 +54,23 @@ Vue.component('global-component', {
         }
     },
     template: `
-        <div id="global_configuration">
-            <form>
+        <div id="global_configuration" class="mx-5">
+            <h3 class="display-4 align-self-center">Global</h3> 
+            <form class="px-5 col-md-5 m-auto">
                 <div>
                     <label>SSID</label>
-                    <input type="text" class="form-control" v-model="SSID" id="ssid" placeholder="SSID">
+                    <input type="text" class="form-control" 
+                        :class="(validSSID) ? 'is-valid' : 'is-invalid'" 
+                        v-model="SSID" placeholder="SSID">
+                    <p v-if="!validSSID"><small>SSID must be 12 characters or less</small></p>
                 </div>
                 <div>
                     <label class="white">Password</label>
-                    <input type="text" class="form-control" v-model="PSWD" id="password" placeholder="Password">
+                    <input type="text" class="form-control" 
+                        :class="(validPSWD) ? 'is-valid' : 'is-invalid'"
+                        v-model="PSWD" id="password" placeholder="Password">
+                    <p v-if="validPSWD"><small>Password can be empty. WiFi will be open</small></p>
+                    <p v-if="!validPSWD"><small>Password must be 8 digits long</small></p>
                 </div>
                 <div>
                     <label class="white">Admin Password</label>
