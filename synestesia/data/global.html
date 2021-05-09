@@ -1,0 +1,86 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="/styles"/>
+        <script>
+            
+            var callOnModuleLoad = "<script>onModuleLoad();</script>";
+
+            /**
+             * Makes a request to the server
+            **/
+            function requestToServer(method, url, callback, body) {
+                var xmlHttp = new XMLHttpRequest();
+                xmlHttp.onload = function() { 
+                    if (callback !== null && callback !== undefined) {
+                        if (xmlHttp.readyState == 4 && xmlHttp.status == 200) { callback(xmlHttp.responseText); }
+                        else { callback(null); }
+                    }
+                };
+                xmlHttp.open(method, url, true);
+                xmlHttp.send(body);
+            }
+
+            /**
+             * Loads needed resources
+            **/
+            function onGlobalLoad() {
+                /*Adds module's html content*/
+                requestToServer('GET', "/module", loadModule, null);
+
+                /*Sets global data*/
+                requestToServer('GET', "/global-data", onFetchGlobalData, null);
+            }
+
+            function loadModule(module_html) {
+                if (module_html === null || module_html === "") return;
+                document.getElementById("module-content").innerHTML += module_html;
+            }
+
+            function onFetchGlobalData(text) {
+                var data = {};
+                
+                if (text !== null) {
+                    var keyValuesList = text.split(";");
+                    for (var i = 0; i < keyValuesList.length; i++) {var keyValue = keyValuesList[i].split(":"); data[keyValue[0]] = keyValue[1];}
+                }
+
+                document.getElementById("ssid").value = (data.SSID) ? data.SSID : "";
+                document.getElementById("password").value = (data.PSWD) ? data.PSWD : ""; 
+                document.getElementById("adm_pass").value = (data.ADM) ? data.ADM : "";
+            }
+
+            function prepareAndSaveGlobalData() {
+                var body = "";
+                body += "SSID:" + document.getElementById("ssid").value + ";";
+                body += "PSWD:" + document.getElementById("password").value + ";";
+                body += "ADM:" + document.getElementById("adm_pass").value + ";";
+
+                requestToServer('POST', "/global-data", null, body);
+            }
+
+        </script>
+    </head>
+    <body onload="onGlobalLoad()">
+        <h1 class="white">Synestesia</h1>
+        <div>
+            <form>
+                <div>
+                    <label class="white">SSID</label>
+                    <input type="text" class="form-control" id="ssid" placeholder="SSID">
+                </div>
+                <div>
+                    <label class="white">Password</label>
+                    <input type="text" class="form-control" id="password" placeholder="Password">
+                </div>
+                <div>
+                    <label class="white">Admin Password</label>
+                    <input type="password" class="form-control" id="adm_pass" placeholder="Password">
+                </div>
+            </form>
+        </div>
+        <div id="module-content"></div>
+        <div>
+            <button type="button" onclick="prepareAndSaveGlobalData()">Save</button>
+        </div>
+    </body>
+</html>

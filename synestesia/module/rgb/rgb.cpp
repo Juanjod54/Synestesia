@@ -55,7 +55,7 @@ RGB * create_rgb (int red, int green, int blue) {
  * Frees allocated memory for RGB and assigns given pointer to NULL
 **/ 
 void delete_rgb(void * rgb) {
-    if (rgb == NULL) return;
+    if (!rgb) return;
     free(rgb);
     rgb = NULL;
 }

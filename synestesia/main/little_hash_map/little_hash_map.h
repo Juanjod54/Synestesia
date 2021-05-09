@@ -43,3 +43,5 @@ void * map_get(LittleHashMap * map, void * key);
 void ** map_keys(LittleHashMap * map);
 
 void ** map_values(LittleHashMap * map);
+
+int map_size(LittleHashMap * map);

@@ -30,6 +30,8 @@ long create_rgb_light_hash(int red_conn, int green_conn, int blue_conn) {
     sprintf(hash_char, "%d%d%d", red_conn, green_conn, blue_conn);
     hash = atoi(hash_char);
 
+    logger("Light hash ok\n");
+
     return hash;
 }
 
@@ -51,6 +53,8 @@ RGB_LIGHT * create_rgb_light (int red_conn, int green_conn, int blue_conn) {
     pinMode(rgb_light -> red_conn, OUTPUT);
     pinMode(rgb_light -> green_conn, OUTPUT);
     pinMode(rgb_light -> blue_conn, OUTPUT);
+
+    logger("Light ok\n");
 
     return rgb_light;
 }
@@ -77,6 +81,18 @@ void delete_rgb_lights(void ** pt_rgb_lights, int length) {
         free(rgb_lights[i]); 
         rgb_lights[i] = NULL;
     }
+}
+
+int get_red_connection(RGB_LIGHT * rgb_light) {
+    return (rgb_light == NULL) ? -1 : rgb_light -> red_conn;
+}
+
+int get_green_connection(RGB_LIGHT * rgb_light) {
+    return (rgb_light == NULL) ? -1 : rgb_light -> green_conn;
+}
+
+int get_blue_connection(RGB_LIGHT * rgb_light) {
+    return (rgb_light == NULL) ? -1 : rgb_light -> blue_conn;
 }
 
 void set_rgb_light(RGB_LIGHT * rgb_light, RGB * color) {

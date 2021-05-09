@@ -126,14 +126,14 @@ char * parse_line(char * line, char** keyword) {
     *keyword = NULL;
 
     if (line == NULL) { 
-        logger(">>> Ignoring line: line is NULL\n");
+        logger("(parse_line) Ignoring line: line is NULL\n");
         return NULL; 
     }
     else if (line[0] == COMMENT) {
-        logger(">>> Ignoring line: COMMENT FOUND\n"); 
+        logger("(parse_line) Ignoring line: COMMENT FOUND\n"); 
         return NULL;
     }
-    
+
     //Parses keyword and value without leading tabs/spaces
     *keyword = strtok_r(line, ":", &token);
     *keyword = get_first_without_tabs_nor_spaces(*keyword);
@@ -143,13 +143,13 @@ char * parse_line(char * line, char** keyword) {
 
     //If could not split line or it is a comment we'll return
     if (*keyword == NULL) { 
-        logger(">>> Ignoring line: KEYWORD NOT FOUND\n");
+        logger("(parse_line) Ignoring line: KEYWORD NOT FOUND\n");
         *keyword = NULL; 
         return NULL; 
     }
 
-    free(token);
-    
+    logger("AIUDA: KEY : %s\n", *keyword);
+
     return value;
 }
 
