@@ -125,17 +125,23 @@ void * update_value(KeyValue * key_value, void * new_value) {
  * It returns the proper index in map structure given a hash value
  * It avoids colissions
 */
-int get_index(LittleHashMap * map, long hash) {
+int get_index(LittleHashMap * map, long hash, long original_hash) {
     int index = hash % map->max_items;
+    
+    if (index < 0) { return -1; }
 
     //New item
-    if (map -> key_values[index] == NULL) return index;
+    if (map -> key_values[index] == NULL) {
+        return index;
+    }
 
     //Item update
-    else if (get_hash(map -> key_values[index]) == hash) return index;
+    else if (get_hash(map -> key_values[index]) == original_hash) {
+        return index;
+    }
 
     //Colision
-    return get_index(map, hash * 2);
+    return get_index(map, (hash + 1) * (map->max_items + 1), original_hash);
 }
 
 /** PUBLIC **/
@@ -232,11 +238,18 @@ int map_put(LittleHashMap * map, void * key, void * value) {
         logger("(map_put) LittleHashMap object is NULL or full\n");
         return 0; 
     }
+    
+    if (key == NULL || value == NULL) { logger("(map_put) WARNING There's a NULL input value\n"); }
 
     hash = map -> hash_fn(key); //Gets hash
     
-    index = get_index(map, hash); //Gets index in structure
+    index = get_index(map, hash, hash); //Gets index in structure
     
+    if (index < 0) {
+        logger("(map_put) Index can not be below 0: %d\n", index);
+        return 0;
+    }
+
     //Creates new key_value
     if (map -> key_values[index] == NULL) {
         map -> key_values[index] = create_key_value(key, value, hash);
@@ -266,7 +279,7 @@ void * map_get(LittleHashMap * map, void * key) {
 
     hash = map -> hash_fn(key); //Gets hash
 
-    index = get_index(map, hash); //Gets index in structure
+    index = get_index(map, hash, hash); //Gets index in structure
     
     return get_value(map -> key_values[index]);
 }

@@ -30,8 +30,6 @@ long create_rgb_light_hash(int red_conn, int green_conn, int blue_conn) {
     sprintf(hash_char, "%d%d%d", red_conn, green_conn, blue_conn);
     hash = atoi(hash_char);
 
-    logger("Light hash ok\n");
-
     return hash;
 }
 
@@ -53,8 +51,6 @@ RGB_LIGHT * create_rgb_light (int red_conn, int green_conn, int blue_conn) {
     pinMode(rgb_light -> red_conn, OUTPUT);
     pinMode(rgb_light -> green_conn, OUTPUT);
     pinMode(rgb_light -> blue_conn, OUTPUT);
-
-    logger("Light ok\n");
 
     return rgb_light;
 }

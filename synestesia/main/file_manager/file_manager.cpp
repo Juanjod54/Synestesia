@@ -148,8 +148,6 @@ char * parse_line(char * line, char** keyword) {
         return NULL; 
     }
 
-    logger("AIUDA: KEY : %s\n", *keyword);
-
     return value;
 }
 

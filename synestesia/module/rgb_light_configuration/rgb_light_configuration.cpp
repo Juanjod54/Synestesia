@@ -48,6 +48,7 @@ struct _RGBLightConfiguration {
 
 //colors_map stores hash -> color, so its hash function will be the hash itself
 long colors_map_hash(void * hash) {
+    if (hash == NULL) return -1;
     return * ((long *) hash);
 }
 
