@@ -182,8 +182,8 @@ char * configuration_to_text(RGBLightConfiguration * configuration, char * delim
     
     lights_size = map_size(configuration -> lights_map);
     
-    if (lights_size <= 0) { 
-        logger("(configuration_to_text) There are no lights\n");
+    if (lights_size < 0) { 
+        logger("(configuration_to_text) There was an error while fetching lights\n");
         return empty; 
     }
     
@@ -208,8 +208,8 @@ char * configuration_to_text(RGBLightConfiguration * configuration, char * delim
         notes_map = (LittleHashMap *) map_get(configuration -> lights_map, lights[lights_index]);
         notes_size = map_size(notes_map);
 
-        if (notes_size <= 0) {
-            logger("(configuration_to_text) There are no available notes\n");
+        if (notes_size < 0) {
+            logger("(configuration_to_text) There was a problem while fetching notes\n");
             continue; 
         }
 
@@ -292,44 +292,47 @@ RGBLightConfiguration * parse_rgb_light_configuration(char * configuration_text,
     logger("(parse_configuration) Configuration text:\n%s\n", configuration_text);
 
     conf = create_rgb_light_configuration();
+    
+    if (conf != NULL) {
 
-    //Reads line by line
-    line = strtok_r(configuration_text, delimiter, &lines);
+        //Reads line by line
+        line = strtok_r(configuration_text, delimiter, &lines);
 
-    //Fill configuration values until we finish files or until are fields are completed
-    while (line != NULL) {
-       
-        //Gets value and sets to which field refers
-        value = parse_line(line, &keyword);
+        //Fill configuration values until we finish files or until are fields are completed
+        while (line != NULL) {
+        
+            //Gets value and sets to which field refers
+            value = parse_line(line, &keyword);
 
-        if (keyword != NULL) {
+            if (keyword != NULL) {
 
-            if (is_light_keyword(keyword) && found_light == 0) {
-                light = NULL;
-                found_light = 1;
-            }
-            else if (value != NULL) {
+                if (is_light_keyword(keyword) && found_light == 0) {
+                    light = NULL;
+                    found_light = 1;
+                }
+                else if (value != NULL) {
+                    
+                    if (is_connection_keyword(keyword) && found_light == 1 && light == NULL) {
+                        found_light = 0;
+                        light = parse_light(value);
+                        add_rgb_light(conf, light);
+                    }
+                    else if (atoi(keyword) > 0 && light != NULL) {
+                        color = parse_color(conf, value);
+                        add_rgb_color(conf, light, atoi(keyword), color);
+                    }
+                    else {
+                        logger("(parse_rgb_light_configuration) Configuration file error: Found %s, found_light flag = %d, light: %s\n", line, found_light, (light == NULL) ? "NULL" : "NOT NULL");
+
+                        free_rgb_light_configuration(conf);
+                        break;
+                    }
+                }
                 
-                if (is_connection_keyword(keyword) && found_light == 1 && light == NULL) {
-                    found_light = 0;
-                    light = parse_light(value);
-                    add_rgb_light(conf, light);
-                }
-                else if (atoi(keyword) > 0 && light != NULL) {
-                    color = parse_color(conf, value);
-                    add_rgb_color(conf, light, atoi(keyword), color);
-                }
-                else {
-                    logger("(parse_rgb_light_configuration) Configuration file error: Found %s, found_light flag = %d, light: %s\n", line, found_light, (light == NULL) ? "NULL" : "NOT NULL");
+            } 
 
-                    free_rgb_light_configuration(conf);
-                    break;
-                }
-            }
-             
-        } 
-
-        line = strtok_r(NULL, delimiter, &lines);
+            line = strtok_r(NULL, delimiter, &lines);
+        }
     }
     
     return conf;

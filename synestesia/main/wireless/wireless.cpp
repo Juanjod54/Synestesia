@@ -54,7 +54,7 @@ void get_global_data () {
 void get_module_data () {
     char * parsed_data = marshall_module_configuration(conf);
     if (parsed_data == NULL) { 
-        web_server.send(500, PLAIN, ERROR); 
+        web_server.send(404, PLAIN, ERROR); 
     }
     else { 
         web_server.send(200, PLAIN, parsed_data); 
@@ -186,10 +186,6 @@ void start_server(Configuration * configuration) {
     web_server.on("/module-data", HTTP_GET, get_module_data);
 
     web_server.on("/configuration", HTTP_POST, wireless_save_configuration);
-
-    //Unmarshalls configuration data and saves it
-    //web_server.on("/global-data", HTTP_POST, save_global_data);
-    //web_server.on("/module-data", HTTP_POST, save_module_data);
     
     web_server.begin();
 }
