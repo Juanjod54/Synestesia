@@ -5,19 +5,24 @@ void setup() {
   Serial.begin(9600);
   while (!Serial) delay(500);
 
-  Configuration * main_conf = load_configuration_and_module(load_module_configuration, free_module_configuration);
+  Configuration * main_conf = load_configuration_and_module(load_rgb_light_configuration, 
+                                                            save_rgb_light_configuration, 
+                                                            marshall_rgb_light_configuration, 
+                                                            unmarshall_rgb_light_configuration, 
+                                                            free_rgb_light_configuration);
+                                                            
   RGBLightConfiguration * rgb_conf = (RGBLightConfiguration *) get_module_configuration(main_conf);
   RGB_LIGHT ** lights = get_lights(rgb_conf);
-  
-  RGB * color_0 = get_color(rgb_conf, lights[0], 2);
-  Serial.println(get_red_color(color_0));
-  Serial.println(get_green_color(color_0));
-  Serial.println(get_blue_color(color_0));
 
-  RGB * color_1 = get_color(rgb_conf, lights[1], 2);
-  Serial.println(get_red_color(color_1));
-  Serial.println(get_green_color(color_1));
-  Serial.println(get_blue_color(color_1));
+  int note = 1;
+  
+  RGB * color = (RGB *) get_color(rgb_conf, lights[0], &note);
+  Serial.print("Red: ");
+  Serial.println(get_red_color(color));
+  Serial.print("Green: ");
+  Serial.println(get_green_color(color));
+  Serial.print("Blue: ");
+  Serial.println(get_blue_color(color));
 
   free_configuration(main_conf);
 }
