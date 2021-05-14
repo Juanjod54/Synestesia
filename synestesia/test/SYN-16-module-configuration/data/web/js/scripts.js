@@ -1,0 +1,1 @@
+function requestToServer(e,n,t,r,u){var a=new XMLHttpRequest;if(a.onload=function(){null!=t&&(4==a.readyState&&200==a.status?t(a.responseText):t(null))},a.open(e,n,!0),null!=u)for(var l=0;l<u.length;l++)a.setRequestHeader(u[l].header,u[l].value);a.send(r)}function renderTemplate(e,n){return e.replace(/\${(\w+)}/g,((e,t)=>n[t]))}
