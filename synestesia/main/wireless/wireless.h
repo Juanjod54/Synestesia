@@ -18,6 +18,8 @@ void start_server(Configuration * configuration);
 
 void handle_client();
 
+int client_connected();
+
 void end_server();
 
 #endif

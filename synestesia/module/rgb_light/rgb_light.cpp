@@ -21,8 +21,27 @@ struct _RGB_LIGHT {
     int red_conn;
     int green_conn;
     int blue_conn;
+    int red_value;
+    int green_value;
+    int blue_value;
     long hash;
 };
+
+void update_values(RGB_LIGHT * rgb_light, RGB * color) {
+    if (rgb_light == NULL || color == NULL) return;
+
+    rgb_light -> red_value = get_red_color(color);
+    rgb_light -> green_value = get_green_color(color);
+    rgb_light -> blue_value = get_blue_color(color);
+}
+
+void write_values(RGB_LIGHT * rgb_light) {
+    if (rgb_light == NULL) return;
+
+    analogWrite(rgb_light -> red_conn, rgb_light -> red_value);
+    analogWrite(rgb_light -> green_conn, rgb_light -> green_value);
+    analogWrite(rgb_light -> blue_conn, rgb_light -> blue_value);
+}
 
 long create_rgb_light_hash(int red_conn, int green_conn, int blue_conn) {
     long hash;
@@ -94,19 +113,36 @@ int get_blue_connection(RGB_LIGHT * rgb_light) {
 void set_rgb_light(RGB_LIGHT * rgb_light, RGB * color) {
     if (rgb_light == NULL || color == NULL) return;
 
+    update_values(rgb_light, color);
+
     // Change rgb color on light.
-    analogWrite(rgb_light -> red_conn, get_red_color(color));
-    analogWrite(rgb_light -> green_conn, get_green_color(color));
-    analogWrite(rgb_light -> blue_conn, get_blue_color(color));
+    write_values(rgb_light);
+}
+
+void fade_out_rgb_light(RGB_LIGHT * rgb_light, RGB * color) {
+    if (rgb_light == NULL || color == NULL) return;
+    
+    int red = rgb_light -> red_value - 10;
+    int green = rgb_light -> green_value - 10;
+    int blue = rgb_light -> blue_value - 10;
+
+    rgb_light -> red_value = (red > 0) ? red : 0;
+    rgb_light -> green_value = (green > 0) ? green : 0;
+    rgb_light -> blue_value = (blue > 0) ? blue : 0;
+
+    // Change rgb color on light.
+    write_values(rgb_light);
 }
 
 void turn_off_rgb_light(RGB_LIGHT * rgb_light) {
     if (rgb_light == NULL) return;
 
+    rgb_light -> red_value = 0;
+    rgb_light -> green_value = 0;
+    rgb_light -> blue_value = 0;
+
     // Turn off pwm on each led-connection
-    analogWrite(rgb_light -> red_conn, 0);
-    analogWrite(rgb_light -> green_conn, 0);
-    analogWrite(rgb_light -> blue_conn, 0);
+    write_values(rgb_light);
 }
 
 long get_rgb_light_hash(void * pt_rgb_light) {

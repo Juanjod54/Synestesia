@@ -409,7 +409,7 @@ RGB_LIGHT ** get_lights(RGBLightConfiguration * configuration) {
  * If no color was found, NULL is returned
 */
 RGB * get_color(RGBLightConfiguration * configuration, RGB_LIGHT * light, int * note) {
-    if (configuration == NULL || light == NULL) { return NULL; }
+    if (configuration == NULL || light == NULL || note == NULL) { return NULL; }
     LittleHashMap * colors_per_light = (LittleHashMap *) map_get(configuration -> lights_map, light);
     return (RGB *) map_get(colors_per_light, note);
 }

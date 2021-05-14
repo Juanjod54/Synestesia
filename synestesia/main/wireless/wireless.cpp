@@ -195,6 +195,10 @@ void handle_client() {
     //if (! is_authentified()) { dns_server.processNextRequest(); }
 }
 
+int client_connected() {
+    return (wifi_softap_get_station_num() > 0) ? 1 : 0;
+}
+
 /**
  * Ends access point configuration
 */
