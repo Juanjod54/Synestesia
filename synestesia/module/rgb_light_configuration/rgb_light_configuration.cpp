@@ -3,6 +3,7 @@
  *  Filename: rgb_light_configuration.cpp 
  **/
 
+#include <math.h>
 #include <string.h>
 
 #include "little_hash_map.h"
@@ -38,6 +39,8 @@
 #define DELIMITER_CHARACTER '$'
 
 #define BUFFER_LENGTH 512
+
+#define BASE_FREQ 16.35
 
 static char buffer[BUFFER_LENGTH] = {'\0'};
 
@@ -409,7 +412,7 @@ RGB_LIGHT ** get_lights(RGBLightConfiguration * configuration) {
  * If no color was found, NULL is returned
 */
 RGB * get_color(RGBLightConfiguration * configuration, RGB_LIGHT * light, int * note) {
-    if (configuration == NULL || light == NULL) { return NULL; }
+    if (configuration == NULL || light == NULL || note == NULL) { return NULL; }
     LittleHashMap * colors_per_light = (LittleHashMap *) map_get(configuration -> lights_map, light);
     return (RGB *) map_get(colors_per_light, note);
 }
@@ -423,4 +426,12 @@ char * marshall_rgb_light_configuration(void * pt_configuration) {
 void * unmarshall_rgb_light_configuration(char * configuration_text) {
     char delimiter = DELIMITER_CHARACTER;
     return parse_rgb_light_configuration(configuration_text, &delimiter);
+}
+
+int get_note (float read_freq, int octaves) {
+    //Gets octave (from 0 to 8)
+    int current_octave = log2(read_freq / BASE_FREQ); //TODO REVISAR SI ES NECESARIO FLOOR
+    int distance_to_base = ((read_freq / (pow(2, current_octave))) - BASE_FREQ) / 2;
+    
+    return distance_to_base + 1;
 }
