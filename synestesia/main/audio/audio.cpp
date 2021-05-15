@@ -17,9 +17,6 @@
 #define NOISE 500 
 
 #define NOTES_PER_OCTAVE 7
-#define BASE_FREQ 16
-
-int base_freqs[] = {16, 18, 21, 22, 24, 28, 31};
 
 //Takes period in ms
 long sampling_period_us = round(1000000 * (1.0 / SAMPLING_RATE));
@@ -38,11 +35,4 @@ float get_frequency () {
     //Get frequency of the highest wave, with an amplitude threshold 
     return Approx_FFT(vReal, SAMPLES, sampling_period_us);
 
-}
-
-int get_note (float read_freq, int octaves) {
-    
-    //Gets octave (from 1 to 9)
-    int current_octave = floor(log2(read_freq / base_freqs[0]));
-    return ((read_freq / (pow(2, current_octave))) - base_freqs[0]) / 2 + 1;
 }

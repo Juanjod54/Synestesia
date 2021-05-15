@@ -38,7 +38,7 @@ void loop() {
       color = get_color(module, lights[0], &note);
       set_rgb_light(lights[0], color);
     }
-    else if (tries ++ > 25) {
+    else {
       fade_out_rgb_light(lights[0], color);
     }
   

@@ -5,6 +5,4 @@
 
 float get_frequency();
 
-int get_note (float read_freq, int base_freq);
-
 #endif
