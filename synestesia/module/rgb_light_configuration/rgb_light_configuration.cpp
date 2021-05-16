@@ -433,5 +433,5 @@ int get_note (float read_freq, int octaves) {
     int current_octave = log2(read_freq / BASE_FREQ); //TODO REVISAR SI ES NECESARIO FLOOR
     int distance_to_base = ((read_freq / (pow(2, current_octave))) - BASE_FREQ) / 2;
     
-    return distance_to_base + 1;
+    return (distance_to_base < 0) ? 0 : distance_to_base + 1;
 }

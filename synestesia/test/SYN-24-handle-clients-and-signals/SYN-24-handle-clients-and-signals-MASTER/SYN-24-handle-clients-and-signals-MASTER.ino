@@ -7,7 +7,8 @@
 #include "wireless.h"
 #include "audio.h"
 
-unsigned int wire_value;
+float wire_value;
+size_t bytes = sizeof(int);
 
 RGB * color;
 RGB_LIGHT ** lights;
@@ -43,11 +44,13 @@ void setup() {
 }
 
 void handle_signals() {
-    Wire.requestFrom(1, 1);
-    wire_value = Wire.read();
+    
+    Wire.requestFrom(1, 10);
+    wire_value = Wire.parseFloat();
     if (wire_value > 0) {
-      int note = get_note(wire_value / 100.0, 2);
+      int note = get_note(wire_value, 2);
       color = get_color(module, lights[0], &note);
+      if (color == NULL) Serial.println("color is null");
       set_rgb_light(lights[0], color);
     }
     else {
