@@ -430,8 +430,11 @@ void * unmarshall_rgb_light_configuration(char * configuration_text) {
 
 int get_note (float read_freq, int octaves) {
     //Gets octave (from 0 to 8)
-    int current_octave = log2(read_freq / BASE_FREQ); //TODO REVISAR SI ES NECESARIO FLOOR
+    int current_octave = log2(read_freq / BASE_FREQ); 
+    //Gets distance to the base freq (set to Do/C by default)
     int distance_to_base = ((read_freq / (pow(2, current_octave))) - BASE_FREQ) / 2;
     
-    return (distance_to_base < 0) ? 0 : distance_to_base + 1;
+    return (distance_to_base < 0) ? 0 : ((current_octave % octaves) + 1) * distance_to_base + 1;
 }
+
+size_t rgb_light_configuration_size() { return sizeof(RGBLightConfiguration); }

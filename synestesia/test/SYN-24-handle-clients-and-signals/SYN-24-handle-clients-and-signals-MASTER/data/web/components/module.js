@@ -16,8 +16,9 @@ Vue.component('ModuleComponent', {
 
         getColorDrop (colors) {
             return {
-                "width": '25px',
-                "height": '25px',
+                "margin": '10px',
+                "min-width": '25px',
+                "min-height": '25px',
                 "background-color" : `rgb(${colors.red}, ${colors.green}, ${colors.blue})`
             };
         },
@@ -29,12 +30,21 @@ Vue.component('ModuleComponent', {
         createNewColor(light, key) {
             if (! key) {
                 key = 1;
-                for (var last_key in light.colors) { if (key <= last_key) key ++; }
+                for (var min_key in light.colors) { if (key >= min_key) key ++; }
             }
             
             this.$set(light.colors, key, {red: 0, green: 0, blue: 0 });
             
             return light.colors[key];
+        },
+
+        removeColor(light, key) {
+            var index = this.lights.indexOf(light);
+            if (index < 0 || this.lights[index].colors[key] === undefined) return;
+            delete light.colors[key];
+            //Readds light to update
+            this.lights.splice(index, 1);
+            this.lights.splice(index, 0, light);
         },
 
         createNewLight() {
@@ -51,6 +61,12 @@ Vue.component('ModuleComponent', {
             this.lights.push(light);
 
             return light;
+        },
+
+        removeLight(light) {
+            var index = this.lights.indexOf(light);
+            if (index < 0) return;
+            this.lights.splice(index, 1);
         },
 
         checkConfiguration: function () {
@@ -128,7 +144,10 @@ Vue.component('ModuleComponent', {
             </div>
 
             <div v-for="light in lights" :key="light.id" class="px-5 border-top mx-5 my-5">
-                <h2 class="display-7 mt-3">Connections</h2>
+                <div class="d-flex justify-content-between">
+                    <h2 class="display-7 mt-3">Connections</h2>
+                    <button class="btn btn-outline-danger align-self-center" @click="removeLight(light)">Remove Light</button>
+                </div>
                 <div class="d-flex flex-column">
                     <div class="d-flex justify-content-md-center" v-for="(value, connection) in light.connections">
                         <label class="col-md-1"> {{ connection }} </label>
@@ -162,10 +181,15 @@ Vue.component('ModuleComponent', {
                                     <input class="col-md-2 border-0 text-center" type="text" v-model="light.colors[note][color_name]" />
                                 </div>
                             </div>
-                            <div class="align-self-center">
-                                <div class="rounded" :style="getColorDrop(light.colors[note])"></div>
+                            <div class="align-self-center col-md-2">
+                                <div class="d-flex flex-row justify-content-between">
+                                    <div class="rounded-circle align-self-center" :style="getColorDrop(light.colors[note])"></div>
+                                    <button class="btn btn-outline-danger align-self-center" @click="removeColor(light, note)">
+                                        Remove color
+                                    </button>
+                                </div>
+                                
                             </div>
-
                         </div>
 
                     </div>

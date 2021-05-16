@@ -40,4 +40,6 @@ void * unmarshall_rgb_light_configuration(char * configuration_text);
 
 int get_note (float read_freq, int base_freq);
 
+size_t rgb_light_configuration_size();
+
 #endif

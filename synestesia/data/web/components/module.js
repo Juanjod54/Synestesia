@@ -16,8 +16,9 @@ Vue.component('ModuleComponent', {
 
         getColorDrop (colors) {
             return {
-                "width": '25px',
-                "height": '25px',
+                "margin": '10px',
+                "min-width": '25px',
+                "min-height": '25px',
                 "background-color" : `rgb(${colors.red}, ${colors.green}, ${colors.blue})`
             };
         },

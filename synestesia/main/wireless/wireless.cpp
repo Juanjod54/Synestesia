@@ -82,12 +82,6 @@ void wireless_save_configuration() {
     }
 
     if (new_configuration != NULL && save_configuration(new_configuration)) {
-        //Frees global configuration object
-        free_configuration(conf);
-
-        //Update configuration reference
-        conf = new_configuration;
-
         web_server.send(200, PLAIN, OK);
         return;
     }
@@ -97,6 +91,13 @@ void wireless_save_configuration() {
 }
 
 /************* OTHER HANDLERS *************/
+
+void reset () {
+    web_server.send(200, PLAIN, OK);
+    wdt_disable();
+    wdt_enable(WDTO_15MS);
+    while (1);
+}
 
 bool is_authentified(){
   if (web_server.hasHeader("Cookie")){
@@ -184,7 +185,8 @@ void start_server(Configuration * configuration) {
     //Marshalls configuration data and returns it
     web_server.on("/global-data", HTTP_GET, get_global_data);
     web_server.on("/module-data", HTTP_GET, get_module_data);
-
+    
+    web_server.on("/reset", HTTP_POST, reset);
     web_server.on("/configuration", HTTP_POST, wireless_save_configuration);
     
     web_server.begin();

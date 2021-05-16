@@ -49,8 +49,9 @@ void handle_signals() {
     wire_value = Wire.parseFloat();
     if (wire_value > 0) {
       int note = get_note(wire_value, 2);
+      Serial.println(wire_value);
+      Serial.println(note);
       color = get_color(module, lights[0], &note);
-      if (color == NULL) Serial.println("color is null");
       set_rgb_light(lights[0], color);
     }
     else {
