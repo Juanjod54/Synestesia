@@ -10,17 +10,12 @@
     <body>
         <div id="app">
             <div class="m-5 sticky-top bg-white">
-                <div class="d-flex justify-content-between bg-white">
+                <div class="d-flex justify-content-between">
                     <h1 class="display-1">Synestesia</h1>
-                    <div class="align-self-center">
-                        <button type="button" class="btn btn-danger btn-lg m-auto" v-on:click="reset()" :disabled="saving">
-                            Reset
-                        </button>
-                        <button type="button" class="btn btn-primary btn-lg m-auto" v-on:click="saveConfiguration()" :disabled="saving || ! canSave">
-                            <span v-if="saving" class="spinner-border spinner-border-sm"></span>
-                            Save
-                        </button>
-                    </div>
+                    <button type="button" class="btn btn-primary btn-lg align-self-center" v-on:click="saveConfiguration()" :disabled="saving || !canSave">
+                        <span v-if="saving" class="spinner-border spinner-border-sm"></span>
+                        Save
+                    </button>
                 </div>
                 <div v-if="saveMessage" 
                     class="alert my-5 mx-2 d-flex justify-content-between col-sm-3 m-auto" 
@@ -89,10 +84,6 @@
                     var module = this.$refs.module.marshallValues();
                     var body = renderTemplate(params, {global: global, module: module});
                     requestToServer('POST', "/configuration", this.handleResponse, body, [{header: "Content-Type", value: "application/x-www-form-urlencoded"}]);
-                },
-
-                reset() {
-                    requestToServer('POST', "/reset");
                 }
             }
         });

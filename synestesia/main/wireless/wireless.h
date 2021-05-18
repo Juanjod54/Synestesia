@@ -7,6 +7,7 @@
 #define WIRELESS_h
 
 #include <Arduino.h>
+#include <ESP8266WiFi.h>
 
 #include "configuration.h"
 
@@ -19,5 +20,7 @@ void start_server(Configuration * configuration);
 void handle_client();
 
 void end_server();
+
+void broadcast_frequency(String freq);
 
 #endif

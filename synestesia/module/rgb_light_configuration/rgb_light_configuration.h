@@ -34,9 +34,12 @@ RGB_LIGHT ** get_lights(RGBLightConfiguration * configuration);
 
 RGB * get_color(RGBLightConfiguration * configuration, RGB_LIGHT * light, int * note);
 
-
 char * marshall_rgb_light_configuration(void * pt_configuration);
 
 void * unmarshall_rgb_light_configuration(char * configuration_text);
+
+int get_note (float read_freq, int base_freq);
+
+size_t rgb_light_configuration_size();
 
 #endif

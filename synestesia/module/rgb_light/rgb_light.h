@@ -28,6 +28,8 @@ void delete_rgb_lights(void ** pt_rgb_lights, int length);
 
 void set_rgb_light(RGB_LIGHT * rgb_light, RGB * color);
 
+void fade_out_rgb_light(RGB_LIGHT * rgb_light, RGB * color);
+
 void turn_off_rgb_light(RGB_LIGHT * rgb_light);
 
 long get_rgb_light_hash(void * pt_rgb_light);
