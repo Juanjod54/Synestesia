@@ -3,6 +3,8 @@
  *  Filename: wireless.cpp
  **/
 
+#include "postUp.h"
+
 #include "wireless.h"
 #include "file_manager.h"
 
@@ -90,14 +92,7 @@ void wireless_save_configuration() {
     web_server.send(500, PLAIN, ERROR);
 }
 
-/************* OTHER HANDLERS *************/
-
-void reset () {
-    web_server.send(200, PLAIN, OK);
-    wdt_disable();
-    wdt_enable(WDTO_15MS);
-    while (1);
-}
+/************* PRIVATE HANDLERS *************/
 
 bool is_authentified(){
   if (web_server.hasHeader("Cookie")){
@@ -129,6 +124,21 @@ void handle_captive () {
 }
 
 
+void reset () {
+    web_server.send(200, PLAIN, OK);
+    wdt_disable();
+    wdt_enable(WDTO_15MS);
+    while (1);
+}
+
+/************* PUBLIC HANDLERS *************/
+
+void handle_client() {
+    web_server.handleClient();
+}
+
+/************* PUBLIC METHODS *************/
+
 /**
  * Sets board as an access_point, by setting given configuration ssid and password
  * @param configuration: Configuration object
@@ -157,17 +167,16 @@ void start_access_point() {
     password = get_password(conf);
     logger("(start_access_point) Values\n\tSSID: %s\n\t%s\n", ssid, (password == NULL) ? "NULL" : password);
 
-    while (! WiFi.softAP(ssid, password)) { delay(100); }
-
+    while (! WiFi.softAP(ssid, password)) { delay(10); }
+    
     //Sets captive portal for any route
-    //dns_server.start(DNS_PORT, "synestesia", apIP);
+    //dns_server.start(DNS_PORT, "synestesia.com", apIP);
 
     AP_SET = 1;
 }
 
-void start_server(Configuration * configuration) {
-    conf = configuration;
-
+//Starts HTTP SERVER
+void start_http_server () {
     start_access_point();
 
     web_server.serveStatic("/vue", SPIFFS, "/web/js/vue.min.js");
@@ -192,9 +201,10 @@ void start_server(Configuration * configuration) {
     web_server.begin();
 }
 
-void handle_client() {
-    web_server.handleClient();
-    //if (! is_authentified()) { dns_server.processNextRequest(); }
+void start_server(Configuration * configuration) {
+    conf = configuration;
+    start_http_server();
+    start_postUp_service();
 }
 
 /**
@@ -204,4 +214,8 @@ void end_server() {
     AP_SET = 0;
     conf = NULL;
     WiFi.softAPdisconnect(true);
+}
+
+void broadcast_frequency(String freq) {
+    broadcast_package((char *) freq.c_str());
 }
