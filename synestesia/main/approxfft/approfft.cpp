@@ -295,7 +295,7 @@ fout=0;fm=0;
         }
 
 
-if (fm == 0) return -1;
+if (fm == 0) return 0;
 
 float fa,fb,fc;
 fa=out_r[fm-1];

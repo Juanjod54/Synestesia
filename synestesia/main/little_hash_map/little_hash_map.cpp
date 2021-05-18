@@ -125,7 +125,7 @@ void * update_value(KeyValue * key_value, void * new_value) {
  * It returns the proper index in map structure given a hash value
  * It avoids colissions
 */
-int get_index(LittleHashMap * map, long hash, long original_hash) {
+int get_index_rec(LittleHashMap * map, long hash, long original_hash, int iterations) {
     int index = hash % map->max_items;
     
     if (index < 0) { return -1; }
@@ -141,7 +141,11 @@ int get_index(LittleHashMap * map, long hash, long original_hash) {
     }
 
     //Colision
-    return get_index(map, (hash + 1) * (map->max_items + 1), original_hash);
+    return (iterations > map -> max_items) ? -1 : get_index_rec(map, (hash + 3), original_hash, ++ iterations);
+}
+
+int get_index(LittleHashMap * map, long hash) {
+    return get_index_rec(map, hash, hash, 1);
 }
 
 /** PUBLIC **/
@@ -243,7 +247,7 @@ int map_put(LittleHashMap * map, void * key, void * value) {
 
     hash = map -> hash_fn(key); //Gets hash
     
-    index = get_index(map, hash, hash); //Gets index in structure
+    index = get_index(map, hash); //Gets index in structure
     
     if (index < 0) {
         logger("(map_put) Index can not be below 0: %d\n", index);
@@ -279,9 +283,9 @@ void * map_get(LittleHashMap * map, void * key) {
 
     hash = map -> hash_fn(key); //Gets hash
 
-    index = get_index(map, hash, hash); //Gets index in structure
-    
-    return get_value(map -> key_values[index]);
+    index = get_index(map, hash); //Gets index in structure
+
+    return (index < 0) ? NULL : get_value(map -> key_values[index]);
 }
 
 /**

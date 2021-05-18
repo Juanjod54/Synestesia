@@ -7,7 +7,7 @@
 #endif
 
 #ifndef MIC
-    #define MIC 0
+    #define MIC 1
 #endif
 
 #ifndef SAMPLING_RATE
