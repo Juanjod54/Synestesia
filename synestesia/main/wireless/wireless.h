@@ -21,4 +21,6 @@ void handle_client();
 
 void end_server();
 
+void broadcast_frequency(String freq);
+
 #endif
