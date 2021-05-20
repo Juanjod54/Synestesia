@@ -9,17 +9,22 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 
-#include "configuration.h"
+#include "Synestesia.h"
 
 /**
- * Sets board as an access_point, by setting given configuration ssid and password
- * @param configuration: Configuration object
+ * Starts wireless services:
+ *      HTTP Server in master mode for master devices
+ *      HTTP Server in receiver mode for receiver devices
+ *      PostUp service for both master and receiver devices
+ **/
+void start_wireless_services(Synestesia * synestesia);
+
+/**
+ * Ends wireless services
 */
-void start_server(Configuration * configuration);
+void end_wireless_services();
 
 void handle_client();
-
-void end_server();
 
 void broadcast_frequency(String freq);
 

@@ -5,8 +5,6 @@
 
 void start_postUp_service();
 
-void broadcast_package(char * msg);
-
 void send_package(char * msg, IPAddress address);
 
 int receive_package(char ** msg);

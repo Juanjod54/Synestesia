@@ -45,8 +45,8 @@ struct _Configuration {
     void * module;
     module_configuration_load load_module;
     module_configuration_save save_module;
-    module_configuration_marshall marshall_module;
-    module_configuration_unmarshall unmarshall_module;
+    module_configuration_marshal marshal_module;
+    module_configuration_unmarshal unmarshal_module;
     module_configuration_free free_module;
 };
 
@@ -248,15 +248,15 @@ Configuration * load_configuration() {
 
 /*
  * Loads configuration file into a new Configuration object. Loads file manager.
- * It uses load, save, marshall, unmarshall and free functions, if they are NOT set to NULL, to load module configuration
+ * It uses load, save, marshal, unmarshal and free functions, if they are NOT set to NULL, to load module configuration
  * If all required fields were found and valid, it returns a new Configuration object with read configuration
  * If there is any missing field or there is any error it loads default values.
  * If default values could not be loaded it returns NULL
 */ 
 Configuration * load_configuration_and_module(module_configuration_load load_fn, 
                                               module_configuration_save save_fn, 
-                                              module_configuration_marshall marshall_fn, 
-                                              module_configuration_unmarshall unmarshall_fn, 
+                                              module_configuration_marshal marshal_fn, 
+                                              module_configuration_unmarshal unmarshal_fn, 
                                               module_configuration_free free_fn) {
                                                   
     char delimiter = '\n';
@@ -284,15 +284,15 @@ Configuration * load_configuration_and_module(module_configuration_load load_fn,
 
     /*** Module load START ****/
 
-    if (load_fn != NULL && save_fn != NULL && marshall_fn != NULL && 
-        unmarshall_fn != NULL && free_fn != NULL && configuration != NULL) {
+    if (load_fn != NULL && save_fn != NULL && marshal_fn != NULL && 
+        unmarshal_fn != NULL && free_fn != NULL && configuration != NULL) {
 
         logger("(load_configuration_and_module) Loading component\n");
         //Assign function pointers
         configuration -> load_module = load_fn;
         configuration -> save_module = save_fn;
-        configuration -> marshall_module = marshall_fn;
-        configuration -> unmarshall_module = unmarshall_fn;
+        configuration -> marshal_module = marshal_fn;
+        configuration -> unmarshal_module = unmarshal_fn;
         configuration -> free_module = free_fn;
 
         //Load module configuration
@@ -339,17 +339,19 @@ int save_global_configuration(Configuration * configuration) {
  * Frees allocated memory for configuration object.
  * @param configuration: The configuration object to free
 */ 
-void free_configuration(Configuration * configuration) {    
-    free_module(configuration);
-    free_global(configuration);
+int free_configuration(Configuration * configuration) {    
+    int ret;
+    ret = free_module(configuration);
+    ret *= free_global(configuration);
+    return ret;
 }
 
 /*
  * Frees allocated memory for global configuration object.
  * @param configuration: The configuration object to free
 */ 
-void free_global(Configuration * configuration) {
-    if (!configuration) return;
+int free_global(Configuration * configuration) {
+    if (!configuration) return 0;
 
     if (configuration -> ssid) {
         free(configuration -> ssid);
@@ -364,12 +366,14 @@ void free_global(Configuration * configuration) {
     configuration -> module = NULL;
     configuration -> load_module = NULL;
     configuration -> save_module = NULL;
-    configuration -> marshall_module = NULL;
-    configuration -> unmarshall_module = NULL;
+    configuration -> marshal_module = NULL;
+    configuration -> unmarshal_module = NULL;
     configuration -> free_module = NULL;
 
     free(configuration);
     configuration = NULL;
+
+    return 1;
 }
 
 /*
@@ -503,14 +507,14 @@ int set_admin_password(Configuration * configuration, char * admin_password) {
 /*
  * Saves a configuration object into a text file, delimiting fields by ';'
 */
-char * marshall_global_configuration(Configuration * configuration) {
+char * marshal_global_configuration(Configuration * configuration) {
     return global_configuration_to_text(configuration, DELIMITER_CHARACTER);
 }
 
 /*
  * Loads global configuration from a text file, in which fields are delimited by 
 */
-Configuration * unmarshall_global_configuration(char * configuration_text) {
+Configuration * unmarshal_global_configuration(char * configuration_text) {
     char delimiter = DELIMITER_CHARACTER;
     return parse_configuration(configuration_text, &delimiter);
 }
@@ -525,8 +529,8 @@ void update_global_configuration_module_references(Configuration * old_configura
     new_configuration -> module = old_configuration -> module;
     new_configuration -> load_module = old_configuration -> load_module;
     new_configuration -> save_module = old_configuration -> save_module;
-    new_configuration -> marshall_module = old_configuration -> marshall_module;
-    new_configuration -> unmarshall_module = old_configuration -> unmarshall_module;
+    new_configuration -> marshal_module = old_configuration -> marshal_module;
+    new_configuration -> unmarshal_module = old_configuration -> unmarshal_module;
     new_configuration -> free_module = old_configuration -> free_module;
 
 }
@@ -549,35 +553,40 @@ int save_module_configuration(Configuration * configuration) {
  * Frees allocated memory for module configuration object.
  * @param configuration: The configuration object which has the module to free
 */ 
-void free_module(Configuration * configuration) {
-    if (!configuration) return;
+int free_module(Configuration * configuration) {
+    if (!configuration) return 0;
 
     if (configuration -> module) {
-        configuration -> free_module (configuration -> module);
+        int ret = configuration -> free_module (configuration -> module);
+
         configuration -> module = NULL;
         configuration -> load_module = NULL;
         configuration -> save_module = NULL;
-        configuration -> marshall_module = NULL;
-        configuration -> unmarshall_module = NULL;
+        configuration -> marshal_module = NULL;
+        configuration -> unmarshal_module = NULL;
         configuration -> free_module = NULL;
+        
+        return ret;
     }
+
+    return 1;
 }
 
 /*
  * Saves a module configuration object into a text file
 */
-char * marshall_module_configuration(Configuration * configuration) {
+char * marshal_module_configuration(Configuration * configuration) {
     if (configuration == NULL) return NULL;
-    return configuration -> marshall_module(configuration -> module);
+    return configuration -> marshal_module(configuration -> module);
 }
 
 /*
  * Saves a module configuration object into a text file
 */
-Configuration * unmarshall_module_configuration(Configuration * configuration, char * configuration_text) {
-    if (configuration == NULL || configuration_text == NULL || !(configuration -> unmarshall_module)) return NULL;
+Configuration * unmarshal_module_configuration(Configuration * configuration, char * configuration_text) {
+    if (configuration == NULL || configuration_text == NULL || !(configuration -> unmarshal_module)) return NULL;
 
-    void * module = (configuration -> unmarshall_module) (configuration_text);
+    void * module = (configuration -> unmarshal_module) (configuration_text);
 
     if (module == NULL) { return NULL; }
     

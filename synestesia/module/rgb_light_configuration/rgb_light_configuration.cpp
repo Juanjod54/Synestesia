@@ -26,10 +26,10 @@
 /* MODULE configuration file */
 #define MODULE_CONFIGURATION_FILE "/module.syn"
 
-#define LIGHT_MARSHALL_STRUCT "%s%s:%s"
-#define CONN_MARSHALL_STRUCT "%s%s:%d,%d,%d%s"
-#define COLOR_MARSHALL_STRUCT "%s%d:%d,%d,%d%s"
-#define LAST_COLOR_MARSHALL_STRUCT "%s%d:%d,%d,%d"
+#define LIGHT_marshal_STRUCT "%s%s:%s"
+#define CONN_marshal_STRUCT "%s%s:%d,%d,%d%s"
+#define COLOR_marshal_STRUCT "%s%d:%d,%d,%d%s"
+#define LAST_COLOR_marshal_STRUCT "%s%d:%d,%d,%d"
 
 
 #define MAX_LIGHTS 2
@@ -200,8 +200,8 @@ char * configuration_to_text(RGBLightConfiguration * configuration, char * delim
     for (lights_index = 0; lights_index < lights_size; lights_index++) {
         //Gets notes for light at index
 
-        sprintf(buffer, LIGHT_MARSHALL_STRUCT, buffer, LIGHT_KEYWORD, delimiter);
-        sprintf(buffer, CONN_MARSHALL_STRUCT, 
+        sprintf(buffer, LIGHT_marshal_STRUCT, buffer, LIGHT_KEYWORD, delimiter);
+        sprintf(buffer, CONN_marshal_STRUCT, 
                 buffer, CONNECTION_KEYWORD, 
                 get_red_connection(lights[lights_index]), 
                 get_green_connection(lights[lights_index]), 
@@ -230,7 +230,7 @@ char * configuration_to_text(RGBLightConfiguration * configuration, char * delim
             if (color != NULL) {
 
                 if (((notes_index + 1) == notes_size) && ((lights_index + 1) == lights_size)) {
-                    sprintf(buffer, LAST_COLOR_MARSHALL_STRUCT, 
+                    sprintf(buffer, LAST_COLOR_marshal_STRUCT, 
                             buffer, notes_index + 1, //Notes start at 1 
                             get_red_color(color), 
                             get_green_color(color), 
@@ -238,7 +238,7 @@ char * configuration_to_text(RGBLightConfiguration * configuration, char * delim
                             delimiter);
                 }
                 else {
-                    sprintf(buffer, COLOR_MARSHALL_STRUCT, 
+                    sprintf(buffer, COLOR_marshal_STRUCT, 
                             buffer, notes_index + 1, //Notes start at 1 
                             get_red_color(color), 
                             get_green_color(color), 
@@ -371,10 +371,10 @@ void * load_rgb_light_configuration() {
  * Frees allocated memory for configuration object.
  * @param configuration: The configuration object to free
 */ 
-void free_rgb_light_configuration(void * pt_configuration) {
+int free_rgb_light_configuration(void * pt_configuration) {
     RGBLightConfiguration * configuration = (RGBLightConfiguration *) pt_configuration;
 
-    if (!configuration) return;
+    if (!configuration) return 0;
     
     if (configuration -> lights_map != NULL) {
         free_map(configuration -> lights_map);
@@ -383,6 +383,8 @@ void free_rgb_light_configuration(void * pt_configuration) {
     
     free(configuration);
     configuration = NULL;
+
+    return 1;
 }
 
 int save_rgb_light_configuration(void * pt_configuration) {
@@ -417,13 +419,13 @@ RGB * get_color(RGBLightConfiguration * configuration, RGB_LIGHT * light, int * 
     return (RGB *) map_get(colors_per_light, note);
 }
 
-char * marshall_rgb_light_configuration(void * pt_configuration) {
+char * marshal_rgb_light_configuration(void * pt_configuration) {
     char delimiter = DELIMITER_CHARACTER;
     RGBLightConfiguration * conf = (RGBLightConfiguration *) pt_configuration;
     return configuration_to_text(conf, &delimiter);
 }
 
-void * unmarshall_rgb_light_configuration(char * configuration_text) {
+void * unmarshal_rgb_light_configuration(char * configuration_text) {
     char delimiter = DELIMITER_CHARACTER;
     return parse_rgb_light_configuration(configuration_text, &delimiter);
 }

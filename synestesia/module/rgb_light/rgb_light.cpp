@@ -119,8 +119,8 @@ void set_rgb_light(RGB_LIGHT * rgb_light, RGB * color) {
     write_values(rgb_light);
 }
 
-void fade_out_rgb_light(RGB_LIGHT * rgb_light, RGB * color) {
-    if (rgb_light == NULL || color == NULL) return;
+void fade_out_rgb_light(RGB_LIGHT * rgb_light) {
+    if (rgb_light == NULL) return;
     
     int red = rgb_light -> red_value - 2;
     int green = rgb_light -> green_value - 2;
