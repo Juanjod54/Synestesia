@@ -406,7 +406,8 @@ int save_rgb_light_configuration(void * pt_configuration) {
  * Returns a list of the lights stored in configuration
 */
 RGB_LIGHT ** get_lights(RGBLightConfiguration * configuration) {
-   return (RGB_LIGHT **) map_keys(configuration -> lights_map);
+    if (configuration == NULL) return NULL;
+    return (RGB_LIGHT **) map_keys(configuration -> lights_map);
 }
 
 /*

@@ -1,32 +1,23 @@
-
 #ifndef SYNESTESIA_h
 #define SYNESTESIA_h
 
 #include "Arduino.h"
 #include "configuration.h"
-
-typedef enum DeviceType {MASTER, SLAVE, RECEIVER, NONE};
+#include "module_functions.h"
 
 typedef struct _Synestesia Synestesia;
+typedef enum DeviceType {MASTER, SLAVE, RECEIVER, NONE};
 
-typedef struct ModuleFunctions {
-    module_configuration_load load_fn; 
-    module_configuration_free free_fn;
-    module_configuration_save save_fn;
-    module_configuration_marshal marshal_fn;
-    module_configuration_unmarshal unmarshal_fn;
-};
+float run_core(Synestesia * synestesia);
 
 Synestesia * initialize(ModuleFunctions * mFn);
 
 Synestesia * initialize_by_type(DeviceType type);
 
-int set_configuration(Synestesia * synestesia, Configuration * configuration);
+DeviceType get_device_type(Synestesia * synestesia);
 
 Configuration * get_configuration(Synestesia * synestesia);
 
-float run_core(Synestesia * synestesia);
-
-DeviceType get_device_type(Synestesia * synestesia);
+int set_configuration(Synestesia * synestesia, Configuration * configuration);
 
 #endif

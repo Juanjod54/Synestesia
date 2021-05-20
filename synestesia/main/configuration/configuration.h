@@ -7,38 +7,10 @@
 #define CONFIGURATION_h
 
 #include "Arduino.h"
-
-/*
- * Returns a module_configuration object defined by the user 
-*/
-typedef void * (*module_configuration_load)();
-
-/*
- * Saves a module_configuration object into a text file 
-*/
-typedef int (*module_configuration_save)(void *);
-
-/*
- * Saves a module_configuration object into a text file
-*/
-typedef char * (*module_configuration_marshal)(void *);
-
-/*
- * Loads a module configuration object from a string
- * First param contains marshaled data
- * Second param its the delimiter string
-*/
-typedef void * (*module_configuration_unmarshal)(char *);
-
-/*
- * Deallocates module_configuration object
- * @param: module_configuration object defined by the user 
-*/
-typedef int (*module_configuration_free)(void*);
+#include "module_functions.h"
 
 /*Configuration object*/
 typedef struct _Configuration Configuration;
-
 /****************** GLOBAL *********************/
 
 /*

@@ -24,7 +24,8 @@
 #define ADMIN_PASSWORD_KEYWORD "ADM"
 
 #define COMMENT '#'
-#define DELIMITER_CHARACTER '$'
+#define DELIMITER_CHARACTER "\n"
+#define WEB_DELIMITER_CHARACTER "$"
 
 /* Number of fields in global parsing */
 #define MOCK_SIZE 16
@@ -136,10 +137,10 @@ void * fill_configuration(Configuration * configuration, char * key, char * valu
  * @param configuration_text: Read text from configuration file
 */ 
 Configuration * parse_configuration(char * configuration_text, char * delimiter) {
-    char * line;
-    char * lines;
-    char * value;
-    char * keyword;
+    char * line = NULL;
+    char * lines = NULL;
+    char * value = NULL;
+    char * keyword = NULL;
 
     int parsed_fields = 0;
 
@@ -153,6 +154,10 @@ Configuration * parse_configuration(char * configuration_text, char * delimiter)
         return NULL;
     }
 
+        Serial.print("DELIMITADOR: ");
+        Serial.println(delimiter);
+
+
     logger("(parse_configuration) Configuration text:\n%s\n\n", configuration_text);
 
     //Reads line by line
@@ -160,7 +165,10 @@ Configuration * parse_configuration(char * configuration_text, char * delimiter)
 
     //Fill configuration values until we finish files or until are fields are completed
     while (line != NULL && parsed_fields != CONFIGURATION_FIELDS) {
-        
+                
+        Serial.print("LINEA: ");
+        Serial.println(line);
+
         //Gets value and sets to which field refers
         value = parse_line(line, &keyword);
 
@@ -191,7 +199,7 @@ Configuration * parse_configuration(char * configuration_text, char * delimiter)
 /*
  * Writes GLOBAL configuration object to a text file, separating fields by delimiter character
 */ 
-char * global_configuration_to_text(Configuration * configuration, char delimiter) {
+char * global_configuration_to_text(Configuration * configuration, char * delimiter) {
     int length;
     char * parsed;
     char * safe_adm;
@@ -259,7 +267,6 @@ Configuration * load_configuration_and_module(module_configuration_load load_fn,
                                               module_configuration_unmarshal unmarshal_fn, 
                                               module_configuration_free free_fn) {
                                                   
-    char delimiter = '\n';
     char * configuration_text;
     Configuration * configuration;
 
@@ -274,7 +281,7 @@ Configuration * load_configuration_and_module(module_configuration_load load_fn,
         logger("(load_configuration_and_module) Configuration file has been loaded with no errors\n");
 
         //Parse configuration file and create Configuration object
-        configuration = parse_configuration(configuration_text, &delimiter);
+        configuration = parse_configuration(configuration_text, DELIMITER_CHARACTER);
 
         //Free configuration text
         free(configuration_text);
@@ -323,7 +330,7 @@ int save_configuration(Configuration * configuration) {
 }
 
 int save_global_configuration(Configuration * configuration) {
-    char * conf_text = global_configuration_to_text(configuration, '\n');
+    char * conf_text = global_configuration_to_text(configuration, "\n\0");
 
     if (conf_text != NULL) {
         if (write_to_file(GLOBAL_CONFIGURATION_FILE, conf_text) > 0) {
@@ -508,15 +515,14 @@ int set_admin_password(Configuration * configuration, char * admin_password) {
  * Saves a configuration object into a text file, delimiting fields by ';'
 */
 char * marshal_global_configuration(Configuration * configuration) {
-    return global_configuration_to_text(configuration, DELIMITER_CHARACTER);
+    return global_configuration_to_text(configuration, WEB_DELIMITER_CHARACTER);
 }
 
 /*
  * Loads global configuration from a text file, in which fields are delimited by 
 */
 Configuration * unmarshal_global_configuration(char * configuration_text) {
-    char delimiter = DELIMITER_CHARACTER;
-    return parse_configuration(configuration_text, &delimiter);
+    return parse_configuration(configuration_text, WEB_DELIMITER_CHARACTER);
 }
 
 /*

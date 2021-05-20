@@ -7,8 +7,6 @@
 #define WIRELESS_h
 
 #include <Arduino.h>
-#include <ESP8266WiFi.h>
-
 #include "Synestesia.h"
 
 /**

@@ -1,20 +1,19 @@
 #include <Wire.h>
 #include "Thread.h"
 
-#include "Synestesia.h"
-
 #include "audio.h"
 #include "wireless.h"
+#include "Synestesia.h"
 
 #define MAX_INSTANCES 1
 
+/**** Freq Analyzer ****/
+static float slave_freq = 0;
+Thread freq_thread = Thread();
+/***********************/
 
-Thread server_thread = Thread();
-
-static Synestesia * static_syn;
 static int instances = 0;
-
-static float slave_freq;
+static Synestesia * static_syn;
 
 struct _Synestesia {
     DeviceType type;
@@ -42,7 +41,7 @@ Synestesia * create_object(DeviceType type) {
     if (instances >= MAX_INSTANCES) return static_syn;
     
     Synestesia * syn = (Synestesia *) malloc(sizeof(syn[0]));
-    
+
     if (syn == NULL) { 
         Serial.println("[FATAL ERROR] Couldn't allocate Synestesia object."); 
         return NULL;
@@ -77,14 +76,32 @@ void free_object(Synestesia * synestesia) {
 
 /************ MASTER ************/ 
 
+void request_frequency() {
+    Wire.requestFrom(1, 10);
+    slave_freq = Wire.parseFloat();
+    broadcast_frequency(String(slave_freq));
+}
+
+#ifdef ARDUINO_ESP8266_NODEMCU
+
+void start_master_dependencies(Synestesia * synestesia) {
+    Wire.begin(D1, D2); //Begins wire
+    freq_thread.onRun(request_frequency); //Creates thread
+    start_wireless_services(synestesia); //Start wireless services
+}
+
+#else
+
+void start_master_dependencies(Synestesia * synestesia) { return; }
+
+#endif
+
 float run_master(Synestesia * synestesia) {
     //Protothread to run web server
-    if (server_thread.shouldRun()) { server_thread.run(); }
+    if (freq_thread.shouldRun()) { freq_thread.run(); }
 
-    Wire.requestFrom(1, 10);
-    float freq = Wire.parseFloat();
-    broadcast_frequency(String(freq));
-    return freq;
+    handle_client();
+    return slave_freq;
 }
 
 Synestesia * initialize_master(ModuleFunctions * mFn) {
@@ -96,6 +113,7 @@ Synestesia * initialize_master(ModuleFunctions * mFn) {
     
     //Creates a Synestesia object
     syn = create_object(MASTER);
+
     if (syn == NULL) { return NULL; }
 
     if (load_module) {
@@ -105,6 +123,7 @@ Synestesia * initialize_master(ModuleFunctions * mFn) {
                                                       mFn -> marshal_fn, 
                                                       mFn -> unmarshal_fn, 
                                                       mFn -> free_fn);
+                                                      
     } 
     else {
         //Module should not load
@@ -166,14 +185,8 @@ float run_core(Synestesia * synestesia) {
 }
 
 Synestesia * initialize(ModuleFunctions * mFn) {
-    //Begins wire
-    Wire.begin(D1, D2);
-
-    //Creates thread
-    server_thread.onRun(handle_client);
-
     Synestesia * synestesia = initialize_master(mFn);
-    if (synestesia != NULL) { start_wireless_services(synestesia); }
+    if (synestesia != NULL) { start_master_dependencies(synestesia); }
     return synestesia;
 }
 

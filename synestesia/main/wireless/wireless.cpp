@@ -3,12 +3,15 @@
  *  Filename: wireless.cpp
  **/
 
+#include "wireless.h"
+
+#ifdef ARDUINO_ESP8266_NODEMCU
+
 #include <DNSServer.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 
 #include "postUp.h"
-#include "wireless.h"
 #include "file_manager.h"
 #include "configuration.h"
 
@@ -222,7 +225,7 @@ void start_wireless_services(Synestesia * synestesia) {
     }
     
     //Run post up service
-    start_postUp_service();
+    //start_postUp_service();
 }
 
 /**
@@ -235,5 +238,14 @@ void end_wireless_services() {
 }
 
 void broadcast_frequency(String freq) {
-    send_package((char *) freq.c_str(), broadcastIP);
+    //send_package((char *) freq.c_str(), broadcastIP);
 }
+
+#else 
+
+void start_wireless_services(Synestesia * synestesia) { return; }
+void end_wireless_services() { return; }
+void handle_client() { return; }
+void broadcast_frequency(String freq) { return; }
+
+#endif

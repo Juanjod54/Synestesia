@@ -4,6 +4,10 @@
  * File: file_manager.cpp
  **/
 
+#include "file_manager.h"
+
+#ifdef ARDUINO_ESP8266_NODEMCU
+
 #include <FS.h> 
 
 #ifdef DEBUG_ESP_PORT
@@ -151,3 +155,18 @@ char * parse_line(char * line, char** keyword) {
     return value;
 }
 
+#else
+
+void init_file_manager() { return; }
+
+void end_file_manager() { return; }
+
+char * read_from_file(char * path) { return NULL; }
+
+int write_to_file(char * path, char * content) { return -1; }
+
+char * get_first_without_tabs_nor_spaces(char * str) { return NULL; }
+
+char * parse_line(char * line, char** keyword) { return NULL; }
+
+#endif

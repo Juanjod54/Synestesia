@@ -28,7 +28,7 @@ void setup() {
 
   /* Initiates Synestesia object */
   synestesia = initialize(&moduleFunctions);
-  if (synestesia == NULL) { 
+  if (! synestesia) { 
     Serial.println("ERROR creating synestesia");
     err = 1;
     return;
@@ -43,7 +43,7 @@ void setup() {
   /* Gets lights stored at module */
   lights = (RGB_LIGHT **) get_lights(module);
   if (lights == NULL) {
-    Serial.println("ERROR creating synestesia");
+    Serial.println("ERROR GETTING MODULE");
     err = 1;
     return;
   }
