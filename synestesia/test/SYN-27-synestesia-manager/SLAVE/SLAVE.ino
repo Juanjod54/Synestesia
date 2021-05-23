@@ -9,9 +9,9 @@ int err = 0;
 Synestesia * synestesia;
 
 void setup() {
-
+  Serial.begin(9600);
   /* Initiates Synestesia object */
-  synestesia = initialize_by_type(SLAVE);
+  synestesia = initialize_slave();
   if (synestesia == NULL) { 
     Serial.println("ERROR creating synestesia");
     err = 1;

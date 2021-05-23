@@ -27,7 +27,7 @@ void setup() {
   moduleFunctions.unmarshal_fn = unmarshal_rgb_light_configuration;
 
   /* Initiates Synestesia object */
-  synestesia = initialize(&moduleFunctions, MASTER);
+  synestesia = initialize(&moduleFunctions, RECEIVER);
   if (! synestesia) { 
     Serial.println("ERROR creating synestesia");
     err = 1;
@@ -35,7 +35,7 @@ void setup() {
   }
 
   /* Gets global configuration */
-  Configuration * main_conf = get_configuration(synestesia);
+  Configuration * main_conf = get_configuration(synestesia); 
 
   /* Gets module */
   module = (RGBLightConfiguration *) get_module_configuration(main_conf);
@@ -47,17 +47,16 @@ void setup() {
     err = 1;
     return;
   }
- 
+  
 }
 
 void loop() {
   if (! err) {
       /* Runs synestesia */
       float freq = run_core(synestesia);
-      
+      Serial.println(freq);
       if (freq > 0) {
         int note = get_note(freq, 2);
-        Serial.println(note);
         color = get_color(module, lights[0], &note);
         set_rgb_light(lights[0], color);
       }
