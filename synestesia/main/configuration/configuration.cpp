@@ -28,16 +28,15 @@
 #define WEB_DELIMITER_CHARACTER "$"
 
 /* Number of fields in global parsing */
-#define MOCK_SIZE 16
+#define MOCK_SIZE 17
 
 /* Number of configuration fields */
-#define CONFIGURATION_FIELDS 3
+#define CONFIGURATION_FIELDS 2
 
 /* Defaults values are loaded if any error occurred */
 #define SSID_DEFAULT "Synestesia"
 #define PSWD_DEFAULT NULL
 #define ADMIN_PASSWORD_DEFAULT "admin"
-
 
 struct _Configuration {
     char * ssid;
@@ -211,16 +210,18 @@ char * global_configuration_to_text(Configuration * configuration, char * delimi
 
     safe_ssid = (configuration -> ssid == NULL) ? empty : configuration -> ssid;
     safe_pswd = (configuration -> password == NULL) ? empty : configuration -> password;
-    safe_adm = (configuration -> admin_password == NULL) ? empty : configuration -> admin_password;
+    //safe_adm = (configuration -> admin_password == NULL) ? empty : configuration -> admin_password;
 
-    length = strlen(safe_ssid) + strlen(safe_pswd) + strlen(safe_adm) + MOCK_SIZE;
+    //length = strlen(safe_ssid) + strlen(safe_pswd) + strlen(safe_adm) + MOCK_SIZE;
+    length = strlen(safe_ssid) + strlen(safe_pswd) + MOCK_SIZE;
     parsed = (char *) malloc(sizeof(parsed[0]) * (length + 1));
     if (parsed == NULL) {
         logger("(parse_global_configuration) Could not allocate memory for parsed fields\n");
         return NULL;
     }
 
-    sprintf(parsed, "SSID:%s%cPSWD:%s%cADM:%s", safe_ssid, delimiter, safe_pswd, delimiter, safe_adm);
+    //sprintf(parsed, "SSID:%s%cPSWD:%s%cADM:%s", safe_ssid, delimiter, safe_pswd, delimiter, safe_adm);
+    sprintf(parsed, "SSID:%s%sPSWD:%s", safe_ssid, delimiter, safe_pswd);
 
     return parsed;
 }
@@ -236,7 +237,7 @@ Configuration * load_defaults() {
     
     set_ssid(configuration, SSID_DEFAULT);
     set_password(configuration, PSWD_DEFAULT);
-    set_admin_password(configuration, ADMIN_PASSWORD_DEFAULT);
+    //set_admin_password(configuration, ADMIN_PASSWORD_DEFAULT);
     
     return configuration;
 }
@@ -330,7 +331,7 @@ int save_configuration(Configuration * configuration) {
 }
 
 int save_global_configuration(Configuration * configuration) {
-    char * conf_text = global_configuration_to_text(configuration, "\n\0");
+    char * conf_text = global_configuration_to_text(configuration, DELIMITER_CHARACTER);
 
     if (conf_text != NULL) {
         if (write_to_file(GLOBAL_CONFIGURATION_FILE, conf_text) > 0) {
@@ -582,7 +583,7 @@ int free_module(Configuration * configuration) {
  * Saves a module configuration object into a text file
 */
 char * marshal_module_configuration(Configuration * configuration) {
-    if (configuration == NULL) return NULL;
+    if (configuration == NULL || configuration -> marshal_module == NULL) { return NULL; } 
     return configuration -> marshal_module(configuration -> module);
 }
 

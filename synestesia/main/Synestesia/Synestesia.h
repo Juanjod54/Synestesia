@@ -10,9 +10,9 @@ typedef enum DeviceType {MASTER, SLAVE, RECEIVER, NONE};
 
 float run_core(Synestesia * synestesia);
 
-Synestesia * initialize(ModuleFunctions * mFn);
+Synestesia * initialize(ModuleFunctions * mFn, DeviceType type);
 
-Synestesia * initialize_by_type(DeviceType type);
+Synestesia * initialize_slave();
 
 DeviceType get_device_type(Synestesia * synestesia);
 

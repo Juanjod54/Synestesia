@@ -7,7 +7,7 @@ Vue.component('global-component', {
                 ssid: true,
                 pswd: true
             },
-            delimiter: '$',
+            delimiter: "$",
             SSID: "",
             PSWD: ""
             //ADM: ""

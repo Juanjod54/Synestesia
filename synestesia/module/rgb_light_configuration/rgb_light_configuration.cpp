@@ -36,7 +36,7 @@
 #define MAX_COLORS 14
 #define MAX_COLORS_PER_LIGHT 14
 
-#define DELIMITER_CHARACTER '$'
+#define DELIMITER_CHARACTER "$"
 
 #define BUFFER_LENGTH 512
 
@@ -421,14 +421,12 @@ RGB * get_color(RGBLightConfiguration * configuration, RGB_LIGHT * light, int * 
 }
 
 char * marshal_rgb_light_configuration(void * pt_configuration) {
-    char delimiter = DELIMITER_CHARACTER;
     RGBLightConfiguration * conf = (RGBLightConfiguration *) pt_configuration;
-    return configuration_to_text(conf, &delimiter);
+    return configuration_to_text(conf, DELIMITER_CHARACTER);
 }
 
 void * unmarshal_rgb_light_configuration(char * configuration_text) {
-    char delimiter = DELIMITER_CHARACTER;
-    return parse_rgb_light_configuration(configuration_text, &delimiter);
+    return parse_rgb_light_configuration(configuration_text, DELIMITER_CHARACTER);
 }
 
 int get_note (float read_freq, int octaves) {

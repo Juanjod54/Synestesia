@@ -53,7 +53,7 @@ ESP8266WebServer web_server(80);
 
 IPAddress apIP(192, 168, 1, 1);
 
-IPAddress apStationIP(192, 168, 1, 1);
+IPAddress apStationIP(192, 168, 1, 10);
 
 IPAddress broadcastIP(192, 168, 1, 255);
 
@@ -130,6 +130,37 @@ void wireless_save_configuration() {
     web_server.send(500, PLAIN, ERROR);
 }
 
+void receiver_connect() {
+    char * ssid = (char *) web_server.arg("target-ssid").c_str();
+    char * pswd = (char *) web_server.arg("target-password").c_str();
+
+    if (ssid == NULL || ssid == "") {
+        logger("(receiver_connect) Could not get SSID\n");
+        web_server.send(500, PLAIN, ERROR);
+        return;
+    }
+
+    if (pswd == "") pswd = NULL;
+
+    logger("(receiver_connect) Connecting to: %s, with password: %s\n", ssid, (pswd == NULL) ? "NULL" : pswd);
+
+    WiFi.begin(ssid, pswd);
+    while (WiFi.status() != WL_CONNECTED && WiFi.status() != WL_CONNECT_FAILED) {    
+        delay(500);
+        logger(".");
+    }
+
+    if (WiFi.status() != WL_CONNECTED ) {
+        WiFi.disconnect(true); //Forget last attemts
+        logger("(receiver_connect) Failed to connect\n");
+        web_server.send(500, PLAIN, ERROR);
+        return;
+    }
+
+    web_server.send(200, PLAIN, OK);
+
+}
+
 /************* PRIVATE HANDLERS *************/
 
 /**
@@ -174,7 +205,7 @@ void init_master_server() {
     while (! WiFi.softAP(ssid, password)) { delay(10); }
     
     //Sets captive portal for any route
-    //TODO: dns_server.start(DNS_PORT, "synestesia.com", apIP);
+    dns_server.start(DNS_PORT, "synestesia.com", apIP);
 
     AP_SET = 1;
 }
@@ -185,7 +216,7 @@ void set_master_http_handlers () {
     web_server.serveStatic("/scripts", SPIFFS, "/web/js/scripts.js");
     web_server.serveStatic("/styles", SPIFFS, "/web/css/bootstrap.min.css");
 
-    web_server.serveStatic("/configuration", SPIFFS, "/web/html/configuration.html");
+    web_server.serveStatic("/configuration", SPIFFS, "/web/html/master.html");
 
     web_server.serveStatic("/global", SPIFFS, "/web/components/global.js");
     web_server.serveStatic("/module", SPIFFS, "/web/components/module.js");
@@ -194,14 +225,75 @@ void set_master_http_handlers () {
     web_server.on("/global-data", HTTP_GET, get_global_data);
     web_server.on("/module-data", HTTP_GET, get_module_data);
     
+    //Reset
     web_server.on("/reset", HTTP_POST, reset);
+    
+    //Saving
     web_server.on("/configuration", HTTP_POST, wireless_save_configuration);
 }
 
+void init_receiver_server() {
+    char * ssid;
+    char * password;
+
+    Configuration * conf = get_configuration(syn);
+
+    if (conf == NULL) {
+        logger("(start_master_server) Configuration object is NULL\n");
+        return;
+    }
+
+    if (AP_SET != 0) {
+        logger("(start_master_server) AP Already started\n");
+        return;
+    }
+
+    WiFi.disconnect(true); //Forget last attemts
+    WiFi.mode(WIFI_AP_STA);
+    WiFi.softAPConfig(apStationIP, apIP, IPAddress(255, 255, 255, 0));
+
+    //If password is NULL AP will be open
+    ssid = get_ssid(conf);
+    password = get_password(conf);
+    logger("(start_master_server) Values\n\t* SSID: %s\n\t* Password: %s\n", ssid, (password == NULL) ? "NULL" : password);
+ 
+    while (! WiFi.softAP(ssid, password)) { delay(10); }
+    
+    //Sets captive portal for any route
+    dns_server.start(DNS_PORT, "synestesia.com", apStationIP);
+
+    AP_SET = 1;
+}
+
+void set_receiver_http_handlers () {
+    web_server.serveStatic("/vue", SPIFFS, "/web/js/vue.min.js");
+    web_server.serveStatic("/scripts", SPIFFS, "/web/js/scripts.js");
+    web_server.serveStatic("/styles", SPIFFS, "/web/css/bootstrap.min.css");
+
+    web_server.serveStatic("/configuration", SPIFFS, "/web/html/receiver.html");
+
+    web_server.serveStatic("/global", SPIFFS, "/web/components/global.js");
+    web_server.serveStatic("/module", SPIFFS, "/web/components/module.js");
+    web_server.serveStatic("/receiver", SPIFFS, "/web/components/receiver.js");
+
+    //marshals configuration data and returns it
+    web_server.on("/global-data", HTTP_GET, get_global_data);
+    web_server.on("/module-data", HTTP_GET, get_module_data);
+    
+    //Reset
+    web_server.on("/reset", HTTP_POST, reset);
+    
+    //Saving
+    web_server.on("/configuration", HTTP_POST, wireless_save_configuration);
+        
+    //Connect to target
+    web_server.on("/connect", HTTP_POST, receiver_connect);
+}
 
 /************* PUBLIC HANDLERS *************/
 
 void handle_client() {
+    dns_server.processNextRequest();
     web_server.handleClient();
 }
 
@@ -217,15 +309,21 @@ void start_wireless_services(Synestesia * synestesia) {
     //Assigns pointers
     syn = synestesia;
 
+    DeviceType type = get_device_type(syn);
+
     //Run http server in master mode
-    if (get_device_type(syn) == MASTER) {
+    if (type == MASTER) {
         init_master_server();
         set_master_http_handlers();
-        web_server.begin();
     }
-    
-    //Run post up service
-    //start_postUp_service();
+    else if (type == RECEIVER) {
+        init_receiver_server();
+        set_receiver_http_handlers();
+    }
+    else { return; }
+
+    web_server.begin();
+    start_postUp_service(); // Run post up service
 }
 
 /**
@@ -238,7 +336,11 @@ void end_wireless_services() {
 }
 
 void broadcast_frequency(String freq) {
-    //send_package((char *) freq.c_str(), broadcastIP);
+    send_package((char *) freq.c_str(), broadcastIP);
+}
+
+float receive_frequency() { 
+    return receive_udp_freq();
 }
 
 #else 
@@ -247,5 +349,6 @@ void start_wireless_services(Synestesia * synestesia) { return; }
 void end_wireless_services() { return; }
 void handle_client() { return; }
 void broadcast_frequency(String freq) { return; }
+float receive_frequency() { return 0; }
 
 #endif

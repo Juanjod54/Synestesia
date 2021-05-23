@@ -4,7 +4,7 @@ Vue.component('ModuleComponent', {
             notes_map: ["do", "re", "mi", "fa", "sol", "la", "si", "DO", "RE", "MI", "FA", "SOL", "LA", "SI"],
             connection_template: "LIGHT:${delimiter}CONN:${red},${green},${blue}${delimiter}",
             color_template: "${note}:${red},${green},${blue}${delimiter}",
-            delimiter: '$',
+            delimiter: "$",
             lights: []
         }
     },
@@ -130,7 +130,7 @@ Vue.component('ModuleComponent', {
         }
     },
     template: `
-        <div id="rgb_light_configuration mx-5" >
+        <div id="rgb_light_configuration" class="mx-5">
             
             <div class="d-flex justify-content-between">
                 <h3 class="display-4 align-self-center">Lights</h3> 

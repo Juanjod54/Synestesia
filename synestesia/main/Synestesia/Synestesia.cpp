@@ -8,7 +8,7 @@
 #define MAX_INSTANCES 1
 
 /**** Freq Analyzer ****/
-static float slave_freq = 0;
+static float read_freq = 0;
 Thread freq_thread = Thread();
 /***********************/
 
@@ -78,33 +78,60 @@ void free_object(Synestesia * synestesia) {
 
 void request_frequency() {
     Wire.requestFrom(1, 10);
-    slave_freq = Wire.parseFloat();
-    broadcast_frequency(String(slave_freq));
+    read_freq = Wire.parseFloat();
 }
-
-#ifdef ARDUINO_ESP8266_NODEMCU
-
-void start_master_dependencies(Synestesia * synestesia) {
-    Wire.begin(D1, D2); //Begins wire
-    freq_thread.onRun(request_frequency); //Creates thread
-    start_wireless_services(synestesia); //Start wireless services
-}
-
-#else
-
-void start_master_dependencies(Synestesia * synestesia) { return; }
-
-#endif
 
 float run_master(Synestesia * synestesia) {
     //Protothread to run web server
     if (freq_thread.shouldRun()) { freq_thread.run(); }
 
     handle_client();
-    return slave_freq;
+    broadcast_frequency(String(read_freq));
+    return read_freq;
 }
 
-Synestesia * initialize_master(ModuleFunctions * mFn) {
+/************ SLAVE ************/ 
+
+void slave_on_request() { Wire.write(String(read_freq).c_str()); }
+float run_slave(Synestesia * synestesia) { read_freq = get_frequency(); }
+
+/*********** RECEIVER ***********/
+
+void read_frequency() {
+    read_freq = receive_frequency();
+}
+
+float run_receiver(Synestesia * synestesia) {
+    if (freq_thread.shouldRun()) { freq_thread.run(); }
+
+    handle_client();
+    return read_freq;
+}
+
+/*******************************/ 
+
+#ifdef ARDUINO_ESP8266_NODEMCU
+
+void start_master_dependencies(Synestesia * synestesia) {
+    Wire.begin(D1, D2); //Begins wire
+    Wire.setTimeout(20);
+    freq_thread.onRun(request_frequency); //Creates thread
+    start_wireless_services(synestesia); //Start wireless services
+}
+
+void start_receiver_dependencies(Synestesia * synestesia) {
+    freq_thread.onRun(read_frequency); //Creates thread
+    start_wireless_services(synestesia); //Start wireless services
+}
+
+#else
+
+void start_master_dependencies(Synestesia * synestesia) { return; }
+void start_receiver_dependencies(Synestesia * synestesia) { return; }
+
+#endif
+
+Synestesia * initialize_by_type(ModuleFunctions * mFn, DeviceType type) {
     Synestesia * syn;
     Configuration * configuration;
 
@@ -112,7 +139,7 @@ Synestesia * initialize_master(ModuleFunctions * mFn) {
     int load_module = check_module_functions(mFn);
     
     //Creates a Synestesia object
-    syn = create_object(MASTER);
+    syn = create_object(type);
 
     if (syn == NULL) { return NULL; }
 
@@ -140,34 +167,11 @@ Synestesia * initialize_master(ModuleFunctions * mFn) {
 
     syn -> configuration = configuration;
 
+    if (type == MASTER) start_master_dependencies(syn);
+    else start_receiver_dependencies(syn);
+
     return syn;
 }
-
-/*******************************/ 
-
-/************ SLAVE ************/ 
-
-void slave_on_request() { Wire.write(String(slave_freq).c_str()); }
-float run_slave(Synestesia * synestesia) { slave_freq = get_frequency(); }
-
-Synestesia * initialize_slave() {
-    Wire.begin(1); 
-    Wire.onRequest(slave_on_request);
-
-    Synestesia * synestesia = create_object(SLAVE);
-    return synestesia;
-}
-
-/*******************************/ 
-
-/*********** RECEIVER ***********/
-float run_receiver(Synestesia * synestesia) {return 0;}
-
-Synestesia * initialize_receiver() {
-    return NULL;
-}
-
-/*******************************/ 
 
 /************************************************************/
 
@@ -178,30 +182,25 @@ float run_core(Synestesia * synestesia) {
     
     if (synestesia -> type == MASTER) { return run_master(synestesia); }
     else if (synestesia -> type == SLAVE) { run_slave(synestesia); }
-    else if (synestesia -> type == RECEIVER) { run_receiver(synestesia); }
+    else if (synestesia -> type == RECEIVER) { return run_receiver(synestesia); }
 
     return 0;
 
 }
 
-Synestesia * initialize(ModuleFunctions * mFn) {
-    Synestesia * synestesia = initialize_master(mFn);
-    if (synestesia != NULL) { start_master_dependencies(synestesia); }
-    return synestesia;
+Synestesia * initialize(ModuleFunctions * mFn, DeviceType type) {
+    if (type == MASTER || type == RECEIVER) { return initialize_by_type(mFn, type); }
+    return NULL;
 }
 
-Synestesia * initialize_by_type(DeviceType type) {
-    Synestesia * synestesia;
+Synestesia * initialize_slave() {
+    Synestesia * synestesia = create_object(SLAVE);
+    if (synestesia != NULL) {
+        Wire.begin(1); 
+        Wire.onRequest(slave_on_request);
+    }
 
-    //If it is a master device it loads it without module
-    if (type == MASTER) { return initialize(NULL); }
-
-    //If it is slave device it should 
-    if (type == SLAVE) { return initialize_slave(); }
-
-    if (type == RECEIVER) { return initialize_receiver(); }
-
-    return NULL;
+    return synestesia;
 }
 
 int set_configuration(Synestesia * synestesia, Configuration * configuration) {

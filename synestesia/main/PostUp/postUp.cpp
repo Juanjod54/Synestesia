@@ -5,10 +5,13 @@
 
 #define PORT 2512
 
+#define TIMEOUT 10
+
 WiFiUDP postUpService;
 
 void start_postUp_service() { 
     postUpService.begin(PORT); 
+    postUpService.setTimeout(TIMEOUT);
 }
 
 void send_package(char * msg, IPAddress address) {
@@ -17,11 +20,10 @@ void send_package(char * msg, IPAddress address) {
     postUpService.endPacket();
 }
 
-int receive_package(char ** msg) {
+float receive_udp_freq() {
+    char * buff;
     int read_size = postUpService.parsePacket();
     if (! read_size) return NULL;
-
-    IPAddress address = postUpService.remoteIP();
-    postUpService.read(*msg, read_size);
-    return read_size;
+    postUpService.read(buff, 10);
+    return String(buff).toFloat();
 }

@@ -26,4 +26,6 @@ void handle_client();
 
 void broadcast_frequency(String freq);
 
+float receive_frequency();
+
 #endif
