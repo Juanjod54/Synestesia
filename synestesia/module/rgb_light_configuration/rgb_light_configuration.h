@@ -28,15 +28,15 @@ int save_rgb_light_configuration(void * pt_configuration);
  * Frees allocated memory for configuration object. Finishes file manager.
  * @param configuration: The configuration object to free
 */ 
-void free_rgb_light_configuration(void * pt_configuration);
+int free_rgb_light_configuration(void * pt_configuration);
 
 RGB_LIGHT ** get_lights(RGBLightConfiguration * configuration);
 
 RGB * get_color(RGBLightConfiguration * configuration, RGB_LIGHT * light, int * note);
 
-char * marshall_rgb_light_configuration(void * pt_configuration);
+char * marshal_rgb_light_configuration(void * pt_configuration);
 
-void * unmarshall_rgb_light_configuration(char * configuration_text);
+void * unmarshal_rgb_light_configuration(char * configuration_text);
 
 int get_note (float read_freq, int base_freq);
 

@@ -1,0 +1,107 @@
+<html>
+    <head>
+        <script src="/vue"></script>
+        <script src="/global"></script>
+        <script src="/module"></script>
+        <script src="/scripts"></script>
+
+        <link rel="stylesheet" href="/styles"/>
+    </head>
+    <body>
+        <div id="app">
+            <div class="m-5 sticky-top bg-white">
+                <div class="d-flex justify-content-between bg-white">
+                    <h1 class="display-1">Synestesia</h1>
+                    <div class="align-self-center">
+                        <button type="button" class="btn btn-danger btn-lg m-auto" v-on:click="reset()" :disabled="saving">
+                            Reset
+                        </button>
+                        <button type="button" class="btn btn-primary btn-lg m-auto" v-on:click="saveConfiguration()" :disabled="saving || ! canSave">
+                            <span v-if="saving" class="spinner-border spinner-border-sm"></span>
+                            Save
+                        </button>
+                    </div>
+                </div>
+                <div v-if="saveMessage" 
+                    class="alert my-5 mx-2 d-flex justify-content-between col-sm-3 m-auto" 
+                    :class="(saveError) ? 'alert-danger' : 'alert-success'">
+                        {{saveMessage}}
+                        <button type="button" class="close" aria-label="Close"  @click="resetSaveFlow()">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                </div>
+            </div>
+            <div class="container-md">
+                <global-component ref="global" @validation="updateValidity('GLOBAL', $event)"></global-component>
+                <module-component ref="module" @validation="updateValidity('MODULE', $event)"></module-component>
+            </div>
+            <div class="m-auto"></div>
+        </div>
+    </body>    
+    
+    <script>
+        
+        Vue.config.devtools = true
+        
+        var app = new Vue({
+            el: '#app',
+            data: {
+                component: {
+                    GLOBAL: true,
+                    MODULE: true
+                },
+                saving: false,
+                saveError: false,
+                saveMessage: null
+            },
+            computed: {
+                canSave () {
+                    return this.component.GLOBAL && this.component.MODULE;
+                }
+            },
+
+            methods: {
+                updateValidity(component, validity) {
+                    this.component[component] = validity;
+                },
+
+                resetSaveFlow() {
+                    this.saving = false;
+                    this.saveMessage = null;
+                    this.saveError = false;
+                },
+
+                handleResponse(responseText) {
+                    this.saving = false;
+                    if (responseText == "OK") {
+                        this.saveMessage = "Configuration has been saved";
+                        this.saveError = false;
+                    }
+                    else {
+                        this.saveMessage = "There was an error while saving data";
+                        this.saveError = true;
+                    }
+                },
+
+                saveConfiguration() {
+                    this.saving = true;
+                    var params = "global=${global}&module=${module}";
+                    var global_component = this.$refs.global;
+                    var module_component = this.$refs.module;
+                    var global = global_component.marshallValues();
+                    var module = (module_component === undefined) ? "" : module_component.marshallValues();
+
+                    var body = renderTemplate(params, {global: global, module: module});
+                    
+                    requestToServer('POST', "/configuration", this.handleResponse, body, [{header: "Content-Type", value: "application/x-www-form-urlencoded"}]);
+                },
+
+                reset() {
+                    requestToServer('POST', "/reset");
+                }
+            }
+        });
+
+    </script>
+</html>
+
