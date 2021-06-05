@@ -7,39 +7,10 @@
 #define CONFIGURATION_h
 
 #include "Arduino.h"
-
-/*
- * Returns a module_configuration object defined by the user 
-*/
-typedef void * (*module_configuration_load)();
-
-/*
- * Saves a module_configuration object into a text file 
-*/
-typedef int (*module_configuration_save)(void *);
-
-/*
- * Saves a module_configuration object into a text file
-*/
-typedef char * (*module_configuration_marshall)(void *);
-
-/*
- * Loads a module configuration object from a string
- * First param contains marshalled data
- * Second param its the delimiter string
-*/
-typedef void * (*module_configuration_unmarshall)(char *);
-
-/*
- * Deallocates module_configuration object
- * @param: module_configuration object defined by the user 
-*/
-typedef void (*module_configuration_free)(void*);
-
+#include "module_functions.h"
 
 /*Configuration object*/
 typedef struct _Configuration Configuration;
-
 /****************** GLOBAL *********************/
 
 /*
@@ -51,15 +22,15 @@ Configuration * load_configuration();
 
 /*
  * Loads configuration file into a new Configuration object. Loads file manager.
- * It uses load, save, marshall, unmarshall and free functions, if they are NOT set to NULL, to load module configuration
+ * It uses load, save, marshal, unmarshal and free functions, if they are NOT set to NULL, to load module configuration
  * If all required fields were found and valid, it returns a new Configuration object with read configuration
  * If there is any missing field or there is any error it loads default values.
  * If default values could not be loaded it returns NULL
 */ 
 Configuration * load_configuration_and_module(module_configuration_load load_fn, 
                                               module_configuration_save save_fn, 
-                                              module_configuration_marshall marshall_fn, 
-                                              module_configuration_unmarshall unmarshall_fn, 
+                                              module_configuration_marshal marshal_fn, 
+                                              module_configuration_unmarshal unmarshal_fn, 
                                               module_configuration_free free_fn);
 
 /*
@@ -73,13 +44,13 @@ int save_global_configuration(Configuration * configuration);
  * Frees allocated memory for global and module configuration objects.
  * @param configuration: The configuration object to free
 */ 
-void free_configuration(Configuration * configuration);
+int free_configuration(Configuration * configuration);
 
 /*
  * Frees allocated memory for global configuration object.
  * @param configuration: The configuration object to free
 */ 
-void free_global(Configuration * configuration);
+int free_global(Configuration * configuration);
 
 /*
  * Gets the SSID value or NULL if configuration is NULL
@@ -132,12 +103,12 @@ int set_admin_password(Configuration * configuration, char * admin_password);
 /*
  * Saves a configuration object into a text file, delimiting fields by ';'
 */
-char * marshall_global_configuration(Configuration * configuration);
+char * marshal_global_configuration(Configuration * configuration);
 
 /*
  * Loads global configuration from a text file, in which fields are delimited by 
 */
-Configuration * unmarshall_global_configuration(char * configuration_text);
+Configuration * unmarshal_global_configuration(char * configuration_text);
 
 /*
  * References module's pointers into a new configuration object
@@ -158,16 +129,16 @@ int save_module_configuration(Configuration * configuration);
  * Frees allocated memory for module configuration object.
  * @param configuration: The configuration object which has the module to free
 */ 
-void free_module(Configuration * configuration);
+int free_module(Configuration * configuration);
 
 /*
  * Saves a module configuration object into a text file
 */
-char * marshall_module_configuration(Configuration * configuration);
+char * marshal_module_configuration(Configuration * configuration);
 
 /*
  * Loads module configuration from a text file 
 */
-Configuration * unmarshall_module_configuration(Configuration * configuration, char * configuration_text);
+Configuration * unmarshal_module_configuration(Configuration * configuration, char * configuration_text);
 
 #endif

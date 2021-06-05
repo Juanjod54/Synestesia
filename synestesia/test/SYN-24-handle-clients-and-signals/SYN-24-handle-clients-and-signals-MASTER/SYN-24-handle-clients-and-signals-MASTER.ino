@@ -26,8 +26,8 @@ void setup() {
   /*Loads configuration and module configuration*/
   Configuration * main_conf = load_configuration_and_module(load_rgb_light_configuration, 
                                                             save_rgb_light_configuration, 
-                                                            marshall_rgb_light_configuration, 
-                                                            unmarshall_rgb_light_configuration, 
+                                                            marshal_rgb_light_configuration, 
+                                                            unmarshal_rgb_light_configuration, 
                                                             free_rgb_light_configuration);
 
   /* Starts configuration server */
