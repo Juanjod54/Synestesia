@@ -131,6 +131,7 @@ void wireless_save_configuration() {
 }
 
 void receiver_connect() {
+    int attempts;
     char * ssid = (char *) web_server.arg("target-ssid").c_str();
     char * pswd = (char *) web_server.arg("target-password").c_str();
 
@@ -142,22 +143,22 @@ void receiver_connect() {
 
     if (pswd == "") pswd = NULL;
 
-    logger("(receiver_connect) Connecting to: %s, with password: %s\n", ssid, (pswd == NULL) ? "NULL" : pswd);
+    logger("(receiver_connect) Connecting to: '%s', with password: '%s'\n", ssid, (pswd == NULL) ? "NULL" : pswd);
 
     WiFi.begin(ssid, pswd);
-    while (WiFi.status() != WL_CONNECTED && WiFi.status() != WL_CONNECT_FAILED) {    
+    for (attempts = 0; attempts < 100; attempts++) {
+        if (WiFi.status() == WL_CONNECTED) { break; }    
         delay(500);
         logger(".");
     }
-
+    
     if (WiFi.status() != WL_CONNECTED ) {
         WiFi.disconnect(true); //Forget last attemts
         logger("(receiver_connect) Failed to connect\n");
         web_server.send(500, PLAIN, ERROR);
-        return;
+    } else {
+        web_server.send(200, PLAIN, OK);
     }
-
-    web_server.send(200, PLAIN, OK);
 
 }
 
@@ -248,7 +249,7 @@ void init_receiver_server() {
         return;
     }
 
-    WiFi.disconnect(true); //Forget last attemts
+    //WiFi.disconnect(true); //Forget last attempts
     WiFi.mode(WIFI_AP_STA);
     WiFi.softAPConfig(apStationIP, apIP, IPAddress(255, 255, 255, 0));
 

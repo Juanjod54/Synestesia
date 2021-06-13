@@ -79,33 +79,28 @@ void free_object(Synestesia * synestesia) {
 void request_frequency() {
     Wire.requestFrom(1, 10);
     read_freq = Wire.parseFloat();
+    broadcast_frequency(String(read_freq));
 }
 
-float run_master(Synestesia * synestesia) {
+void run_master(Synestesia * synestesia) {
     //Protothread to run web server
     if (freq_thread.shouldRun()) { freq_thread.run(); }
 
     handle_client();
-    broadcast_frequency(String(read_freq));
-    return read_freq;
 }
 
 /************ SLAVE ************/ 
 
 void slave_on_request() { Wire.write(String(read_freq).c_str()); }
-float run_slave(Synestesia * synestesia) { read_freq = get_frequency(); }
+void run_slave(Synestesia * synestesia) { read_freq = get_frequency(); }
 
 /*********** RECEIVER ***********/
 
-void read_frequency() {
-    read_freq = receive_frequency();
-}
-
-float run_receiver(Synestesia * synestesia) {
-    if (freq_thread.shouldRun()) { freq_thread.run(); }
-
+void run_receiver(Synestesia * synestesia) {
+    //if (freq_thread.shouldRun()) { freq_thread.run(); }
+    float new_freq = receive_frequency();
+    if (new_freq >= 0) { read_freq = new_freq; }
     handle_client();
-    return read_freq;
 }
 
 /*******************************/ 
@@ -120,7 +115,6 @@ void start_master_dependencies(Synestesia * synestesia) {
 }
 
 void start_receiver_dependencies(Synestesia * synestesia) {
-    freq_thread.onRun(read_frequency); //Creates thread
     start_wireless_services(synestesia); //Start wireless services
 }
 
@@ -180,12 +174,11 @@ Synestesia * initialize_by_type(ModuleFunctions * mFn, DeviceType type) {
 float run_core(Synestesia * synestesia) {
     if (synestesia == NULL) return 0;
     
-    if (synestesia -> type == MASTER) { return run_master(synestesia); }
+    if (synestesia -> type == MASTER) { run_master(synestesia); }
     else if (synestesia -> type == SLAVE) { run_slave(synestesia); }
-    else if (synestesia -> type == RECEIVER) { return run_receiver(synestesia); }
+    else if (synestesia -> type == RECEIVER) { run_receiver(synestesia); }
 
-    return 0;
-
+    return read_freq;
 }
 
 Synestesia * initialize(ModuleFunctions * mFn, DeviceType type) {

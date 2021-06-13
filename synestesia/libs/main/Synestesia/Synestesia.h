@@ -20,4 +20,10 @@ Configuration * get_configuration(Synestesia * synestesia);
 
 int set_configuration(Synestesia * synestesia, Configuration * configuration);
 
+void free_all(Synestesia * synestesia);
+
+int write_file_to_flash(char * path, char * content);
+
+char * read_file_from_flash(char * path);
+
 #endif

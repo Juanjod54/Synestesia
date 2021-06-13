@@ -5,9 +5,12 @@
 
 #define PORT 2512
 
-#define TIMEOUT 10
+#define TIMEOUT 50
+#define BUFF_SIZE 5
 
 WiFiUDP postUpService;
+
+char buff[BUFF_SIZE];
 
 void start_postUp_service() { 
     postUpService.begin(PORT); 
@@ -15,15 +18,20 @@ void start_postUp_service() {
 }
 
 void send_package(char * msg, IPAddress address) {
+    Serial.println(msg);
     postUpService.beginPacket(address, PORT);
     postUpService.write(msg);
     postUpService.endPacket();
 }
 
 float receive_udp_freq() {
-    char * buff;
+    int i;
     int read_size = postUpService.parsePacket();
-    if (! read_size) return NULL;
-    postUpService.read(buff, 10);
+    
+    if (read_size == 0) { return -1; }
+    for (i = 0; i < BUFF_SIZE; i++) { buff[i] = '\0'; }
+
+    postUpService.read((char *) buff, BUFF_SIZE);
+    Serial.println(buff);
     return String(buff).toFloat();
 }
