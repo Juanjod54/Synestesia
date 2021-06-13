@@ -18,7 +18,6 @@ void start_postUp_service() {
 }
 
 void send_package(char * msg, IPAddress address) {
-    Serial.println(msg);
     postUpService.beginPacket(address, PORT);
     postUpService.write(msg);
     postUpService.endPacket();
@@ -32,6 +31,5 @@ float receive_udp_freq() {
     for (i = 0; i < BUFF_SIZE; i++) { buff[i] = '\0'; }
 
     postUpService.read((char *) buff, BUFF_SIZE);
-    Serial.println(buff);
     return String(buff).toFloat();
 }
