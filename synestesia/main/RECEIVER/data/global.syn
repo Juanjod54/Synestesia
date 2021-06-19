@@ -1,0 +1,6 @@
+# SSID name
+SSID: Synestesia
+# PSWD for WiFi network. If NULL WiFi will be open
+PSWD: SYN_2021
+# Admin password
+ADM: admin

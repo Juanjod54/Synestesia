@@ -33,6 +33,6 @@ float get_frequency () {
     }
 
     //Get frequency of the highest wave, with an amplitude threshold 
-    return Approx_FFT(vReal, SAMPLES, sampling_period_us);
+    return Approx_FFT(vReal, SAMPLES, SAMPLING_RATE);
 
 }

@@ -2,7 +2,7 @@
     <head>
         <script src="/vue"></script>
         <script src="/global"></script>
-        <script src="/receiver"></script>
+        <script src="/module"></script>
         <script src="/scripts"></script>
 
         <link rel="stylesheet" href="/styles"/>
@@ -33,8 +33,9 @@
             </div>
             <div class="container-md">
                 <global-component ref="global" @validation="updateValidity('GLOBAL', $event)"></global-component>
-                <receiver-component></receiver-component>
+                <module-component ref="module" @validation="updateValidity('MODULE', $event)"></module-component>
             </div>
+            <div class="m-auto"></div>
         </div>
     </body>    
     
@@ -85,9 +86,13 @@
                 saveConfiguration() {
                     this.saving = true;
                     var params = "global=${global}&module=${module}";
-                    var global = this.$refs.global.marshallValues();
-                    var module = this.$refs.module.marshallValues();
+                    var global_component = this.$refs.global;
+                    var module_component = this.$refs.module;
+                    var global = global_component.marshallValues();
+                    var module = (module_component === undefined) ? "" : module_component.marshallValues();
+
                     var body = renderTemplate(params, {global: global, module: module});
+                    
                     requestToServer('POST', "/configuration", this.handleResponse, body, [{header: "Content-Type", value: "application/x-www-form-urlencoded"}]);
                 },
 

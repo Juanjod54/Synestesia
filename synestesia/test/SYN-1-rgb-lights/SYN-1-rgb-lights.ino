@@ -22,9 +22,9 @@ char input[15];
   int LIGHT_1_BLUE;
 
   // Connections (Set OUTPUT pinout)
-  int LIGHT_1_CON_RED = 6;
-  int LIGHT_1_CON_GREEN = 3;
-  int LIGHT_1_CON_BLUE = 5;
+  int LIGHT_1_CON_RED = 12;
+  int LIGHT_1_CON_GREEN = 13;
+  int LIGHT_1_CON_BLUE = 14;
 /*************************/
 
 

@@ -31,6 +31,7 @@
 #define COLOR_marshal_STRUCT "%s%d:%d,%d,%d%s"
 #define LAST_COLOR_marshal_STRUCT "%s%d:%d,%d,%d"
 
+#define NOTES_PER_OCTAVE 7
 
 #define MAX_LIGHTS 2
 #define MAX_COLORS 14
@@ -435,7 +436,7 @@ int get_note (float read_freq, int octaves) {
     //Gets distance to the base freq (set to Do/C by default)
     int distance_to_base = ((read_freq / (pow(2, current_octave))) - BASE_FREQ) / 2;
     
-    return (distance_to_base < 0) ? 0 : ((current_octave % octaves) + 1) * distance_to_base + 1;
+    return (distance_to_base < 0) ? 0 : ((current_octave % octaves * NOTES_PER_OCTAVE) + (distance_to_base + 1));
 }
 
 size_t rgb_light_configuration_size() { return sizeof(RGBLightConfiguration); }
