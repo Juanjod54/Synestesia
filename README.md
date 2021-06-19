@@ -8,6 +8,12 @@ Desde su concepto, Synestesia se ha diseñado para ser configurable, escalable y
 El sistema está compuesto por un dispositivo emisor y uno o más dispositivos clientes.
 Mientras que el dispositivo emisor se encarga de reconocer las frecuencias y gestionar la configuración general y del módulo (si procede), los dispositivos clientes se conectan inalámbricamente al dispositivo emisor para recibir la frecuencia analizada por éste.
 
+# Vídeos
+
+[La venganza de Gaia - Mägo de Oz](https://youtu.be/UWesdEeDR3A)
+[Vive - Saurom](https://youtu.be/wd7kBOEUFDI)
+
+
 # Requisitos 
 
 ## Materiales
