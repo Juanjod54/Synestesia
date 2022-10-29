@@ -59,7 +59,6 @@ Para configurar el módulo y la configuracion global es necesario conectarse a l
 En la carpeta `synestesia/tests` se encuentran los programas realizados para realizar las pruebas del código entregado. Cada módulo desarrollado tiene asociado un programa de pruebas. Para habilitar la depuración, sera necesario establecer la salida *Debug Port* a *Serial*, desde Arduino IDE.
 
 # Acerca de
-Dudas, comentarios y sugerencias a juanjod54@gmail.com
 
 Puedes reutilizar los componentes desarrollados en este proyecto con total libertad, mencionando mi trabajo.
 
